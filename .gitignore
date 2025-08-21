@@ -34,3 +34,7 @@ build/
 
 ### MacOS ###
 .DS_Store
+
+### Dev ###
+src/main/resources/application-dev.properties
+src/main/resources/liquibase/liquibase.properties

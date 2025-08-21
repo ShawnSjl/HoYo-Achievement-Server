@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3-add-admin-user
+      author: ShawnSjl
+      context: "dev, prod"
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column: { name: username, value: "admin" }
+              - column: { name: password, value: ""}
+              - column: { name: salt, value: ""}
+              - column: { name: uuid, value: ""}
+              - column: { name: role, value: "ADMIN"}
+              - column: { name: status, value: "ACTIVE"}
+      rollback:
+        - delete:
+            tableName: users
+            where: "username='admin'"

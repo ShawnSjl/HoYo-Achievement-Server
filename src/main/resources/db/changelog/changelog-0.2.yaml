@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2-add-user-index
+      author: ShawnSjl
+      context: "dev, prod"
+      changes:
+        - createIndex:
+            tableName: users
+            indexName: ix_user_username
+            unique: true
+            columns:
+              - column: { name: username }
+      rollback:
+        - dropIndex: {tableName: user, indexName: ix_user_username }
