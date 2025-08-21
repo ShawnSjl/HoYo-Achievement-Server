@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 1-create_users
+      id: create_users
       author: ShawnSjl
       context: "dev, prod"
       changes:
@@ -19,3 +19,17 @@ databaseChangeLog:
               - column: { name: updated_at, type: DATETIME, defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP }
       rollback:
         - dropTable: { tableName: users }
+
+  - changeSet:
+      id: add-user-index
+      author: ShawnSjl
+      context: "dev, prod"
+      changes:
+        - createIndex:
+            tableName: users
+            indexName: ix_user_username
+            unique: true
+            columns:
+              - column: { name: username }
+      rollback:
+        - dropIndex: { tableName: users, indexName: ix_user_username }

@@ -1,19 +1,160 @@
 databaseChangeLog:
+  # 1) sr_achievement
   - changeSet:
-      id: 3-add-admin-user
+      id: create-sr-achievement
       author: ShawnSjl
-      context: "dev, prod"
+      context: "dev,prod"
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: sr_achievement
+
       changes:
-        - insert:
-            tableName: users
+        - createTable:
+            tableName: sr_achievement
             columns:
-              - column: { name: username, value: "admin" }
-              - column: { name: password, value: ""}
-              - column: { name: salt, value: ""}
-              - column: { name: uuid, value: ""}
-              - column: { name: role, value: "ADMIN"}
-              - column: { name: status, value: "ACTIVE"}
+              - column:
+                  name: achievement_id
+                  type: INT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: class
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reward_level
+                  type: INT
+                  defaultValueNumeric: 1
+              - column:
+                  name: hidden
+                  type: INT
+                  defaultValueNumeric: 0
+              - column:
+                  name: game_version
+                  type: VARCHAR(16)
+                  constraints:
+                    nullable: false
+
       rollback:
-        - delete:
-            tableName: users
-            where: "username='admin'"
+        - dropTable:
+            tableName: sr_achievement
+
+  # 2) sr_branch
+  - changeSet:
+      id: create-sr-branch
+      author: ShawnSjl
+      context: "dev,prod"
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists: { tableName: sr_achievement }
+        - not:
+            tableExists:
+              tableName: sr_branch
+
+      changes:
+        - createTable:
+            tableName: sr_branch
+            columns:
+              - column:
+                  name: achievement_id
+                  type: INT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: branch_id
+                  type: INT
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            constraintName: fk_sr_branch_achievement
+            baseTableName: sr_branch
+            baseColumnNames: achievement_id
+            referencedTableName: sr_achievement
+            referencedColumnNames: achievement_id
+            onDelete: CASCADE
+            deferrable: false
+            initiallyDeferred: false
+            validate: true
+
+      rollback:
+        - dropTable:
+            tableName: sr_branch
+
+  # 3) sr_user_record（联合主键 + 外键到 users 与 sr_achievement）
+  - changeSet:
+      id: create-sr-user-record
+      author: ShawnSjl
+      context: "dev,prod"
+      preConditions:
+        - onFail: HALT
+        - tableExists: { tableName: sr_achievement }
+        - tableExists: { tableName: users }
+        - not:
+            tableExists:
+              tableName: sr_user_record
+
+      changes:
+        - createTable:
+            tableName: sr_user_record
+            columns:
+              - column:
+                  name: user_uuid
+                  type: VARCHAR(256)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: achievement_id
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: complete
+                  type: INT
+                  defaultValueNumeric: 0
+        - addPrimaryKey:
+            tableName: sr_user_record
+            columnNames: user_uuid, achievement_id
+            constraintName: pk_sr_user_record
+
+        - addForeignKeyConstraint:
+            constraintName: fk_su_user
+            baseTableName: sr_user_record
+            baseColumnNames: user_uuid
+            referencedTableName: users
+            referencedColumnNames: uuid
+            onDelete: CASCADE
+            deferrable: false
+            initiallyDeferred: false
+            validate: true
+
+        - addForeignKeyConstraint:
+            constraintName: fk_su_achievement
+            baseTableName: sr_user_record
+            baseColumnNames: achievement_id
+            referencedTableName: sr_achievement
+            referencedColumnNames: achievement_id
+            onDelete: CASCADE
+            deferrable: false
+            initiallyDeferred: false
+            validate: true
+
+      rollback:
+        - dropTable:
+            tableName: sr_user_record
