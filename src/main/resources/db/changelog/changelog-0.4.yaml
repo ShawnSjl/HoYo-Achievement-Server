@@ -81,10 +81,6 @@ databaseChangeLog:
                   type: INT
                   constraints:
                     nullable: false
-        - addPrimaryKey:
-            tableName: sr_branch
-            columnNames: achievement_id, branch_id
-            constraintName: pk_sr_branch
         - addForeignKeyConstraint:
             constraintName: fk_sr_branch_achievement
             baseTableName: sr_branch
@@ -132,14 +128,14 @@ databaseChangeLog:
             columnNames: account_uuid, achievement_id
             constraintName: pk_sr_user_record
         - addForeignKeyConstraint:
-            constraintName: fk_zu_user
+            constraintName: fk_su_user
             baseTableName: sr_user_record
             baseColumnNames: account_uuid
             referencedTableName: account
             referencedColumnNames: account_uuid
             onDelete: CASCADE
         - addForeignKeyConstraint:
-            constraintName: fk_zu_achievement
+            constraintName: fk_su_achievement
             baseTableName: sr_user_record
             baseColumnNames: achievement_id
             referencedTableName: sr_achievement

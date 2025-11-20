@@ -81,10 +81,6 @@ databaseChangeLog:
                   type: INT
                   constraints:
                     nullable: false
-        - addPrimaryKey:
-            tableName: zzz_branch
-            columnNames: achievement_id, branch_id
-            constraintName: pk_zzz_branch
         - addForeignKeyConstraint:
             constraintName: fk_zzz_branch_achievement
             baseTableName: zzz_branch

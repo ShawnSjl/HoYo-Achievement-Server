@@ -26,4 +26,15 @@ public class UserController {
     public SaResult isLogin() {
         return SaResult.ok("是否登录：" + StpUtil.isLogin());
     }
+
+    @RequestMapping("tokenInfo")
+    public SaResult tokenInfo() {
+        return SaResult.data(StpUtil.getTokenInfo());
+    }
+
+    @RequestMapping("logout")
+    public SaResult logout() {
+        StpUtil.logout();
+        return SaResult.ok();
+    }
 }

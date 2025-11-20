@@ -16,7 +16,6 @@ public class User {
     private String username;
     private String password;
     private String salt;
-    private String uuid;
     private UserRole role = UserRole.USER;
     private UserStatus status = UserStatus.ACTIVE;
 
