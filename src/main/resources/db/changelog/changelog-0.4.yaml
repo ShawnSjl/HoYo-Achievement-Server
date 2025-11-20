@@ -1,17 +1,17 @@
 databaseChangeLog:
-  # 1) zzz_achievement
+  # 1) sr_achievement
   - changeSet:
-      id: create_zzz_achievement
+      id: create_sr_achievement
       author: ShawnSjl
       context: "dev,prod"
       preConditions:
         - onFail: MARK_RAN
         - not:
             tableExists:
-              tableName: zzz_achievement
+              tableName: sr_achievement
       changes:
         - createTable:
-            tableName: zzz_achievement
+            tableName: sr_achievement
             columns:
               - column:
                   name: achievement_id
@@ -20,8 +20,8 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: class_id
-                  type: INT
+                  name: class
+                  type: VARCHAR(64)
                   constraints:
                     nullable: false
               - column:
@@ -53,22 +53,22 @@ databaseChangeLog:
                     nullable: false
       rollback:
         - dropTable:
-            tableName: zzz_achievement
+            tableName: sr_achievement
 
-  # 2) zzz_branch
+  # 2) sr_branch
   - changeSet:
-      id: create_zzz_branch
+      id: create_sr_branch
       author: ShawnSjl
       context: "dev,prod"
       preConditions:
-        - tableExists: { tableName: zzz_achievement }
+        - tableExists: { tableName: sr_achievement }
         - onFail: MARK_RAN
         - not:
             tableExists:
-              tableName: zzz_branch
+              tableName: sr_branch
       changes:
         - createTable:
-            tableName: zzz_branch
+            tableName: sr_branch
             columns:
               - column:
                   name: achievement_id
@@ -82,35 +82,35 @@ databaseChangeLog:
                   constraints:
                     nullable: false
         - addPrimaryKey:
-            tableName: zzz_branch
+            tableName: sr_branch
             columnNames: achievement_id, branch_id
-            constraintName: pk_zzz_branch
+            constraintName: pk_sr_branch
         - addForeignKeyConstraint:
-            constraintName: fk_zzz_branch_achievement
-            baseTableName: zzz_branch
+            constraintName: fk_sr_branch_achievement
+            baseTableName: sr_branch
             baseColumnNames: achievement_id
-            referencedTableName: zzz_achievement
+            referencedTableName: sr_achievement
             referencedColumnNames: achievement_id
             onDelete: CASCADE
       rollback:
         - dropTable:
-            tableName: zzz_branch
+            tableName: sr_branch
 
-  # 3) zzz_user_record（联合主键 + 外键到 users 与 zzz_achievement）
+  # 3) sr_user_record（联合主键 + 外键到 users 与 sr_achievement）
   - changeSet:
-      id: create_zzz_user_record
+      id: create_sr_user_record
       author: ShawnSjl
       context: "dev,prod"
       preConditions:
-        - tableExists: { tableName: zzz_achievement }
+        - tableExists: { tableName: sr_achievement }
         - tableExists: { tableName: account }
         - onFail: MARK_RAN
         - not:
             tableExists:
-              tableName: zzz_user_record
+              tableName: sr_user_record
       changes:
         - createTable:
-            tableName: zzz_user_record
+            tableName: sr_user_record
             columns:
               - column:
                   name: account_uuid
@@ -128,23 +128,23 @@ databaseChangeLog:
                   type: INT
                   defaultValueNumeric: 0
         - addPrimaryKey:
-            tableName: zzz_user_record
+            tableName: sr_user_record
             columnNames: account_uuid, achievement_id
-            constraintName: pk_zzz_user_record
+            constraintName: pk_sr_user_record
         - addForeignKeyConstraint:
             constraintName: fk_zu_user
-            baseTableName: zzz_user_record
+            baseTableName: sr_user_record
             baseColumnNames: account_uuid
             referencedTableName: account
             referencedColumnNames: account_uuid
             onDelete: CASCADE
         - addForeignKeyConstraint:
             constraintName: fk_zu_achievement
-            baseTableName: zzz_user_record
+            baseTableName: sr_user_record
             baseColumnNames: achievement_id
-            referencedTableName: zzz_achievement
+            referencedTableName: sr_achievement
             referencedColumnNames: achievement_id
             onDelete: CASCADE
       rollback:
         - dropTable:
-            tableName: zzz_user_record
+            tableName: sr_user_record

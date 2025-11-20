@@ -3,22 +3,61 @@ databaseChangeLog:
       id: create_users
       author: ShawnSjl
       context: "dev, prod"
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: users
       changes:
         - createTable:
             tableName: users
             remarks: 用户表
             columns:
               - column: { name: id, type: BIGINT UNSIGNED AUTO_INCREMENT, constraints: { primaryKey: true } }
-              - column: { name: username, type: VARCHAR(30), constraints: { nullable: false, unique: true } }
-              - column: { name: password, type: VARCHAR(256), constraints: { nullable: false } }
+              - column: { name: username, type: VARCHAR(50), constraints: { nullable: false, unique: true } }
+              - column: { name: password, type: VARCHAR(512), constraints: { nullable: false } }
               - column: { name: salt, type: VARCHAR(20), constraints: { nullable: false } }
-              - column: { name: uuid, type: VARCHAR(256), constraints: { nullable: false, unique: true } }
               - column: { name: role, type: VARCHAR(16), defaultValue: "USER" }
               - column: { name: status, type: VARCHAR(16), defaultValue: "ACTIVE" }
               - column: { name: created_at, type: DATETIME, defaultValueComputed: CURRENT_TIMESTAMP }
               - column: { name: updated_at, type: DATETIME, defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP }
       rollback:
         - dropTable: { tableName: users }
+
+  - changeSet:
+      id: create_account
+      author: ShawnSjl
+      context: "dev, prod"
+      preConditions:
+        - tableExists:
+            tableName: users
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: account
+      changes:
+        - createTable:
+            tableName: account
+            remarks: 账号表
+            columns:
+              - column: { name: user_id, type: BIGINT, constraints: { primaryKey: true } }
+              - column: { name: account_uuid, type: VARCHAR(512), constraints: { nullable: false, unique: true } }
+              - column: { name: game_type, type: VARCHAR(24), constraints: { nullable: false } }
+              - column: { name: account_name, type: VARCHAR(24), constraints: { nullable: false } }
+              - column: { name: account_id, type: VARCHAR(128) }
+        - addPrimaryKey:
+            tableName: account
+            columnNames: user_id, account_uuid
+            constraintName: pk_account
+        - addForeignKeyConstraint:
+            constraintName: fk_users_account_user_id
+            baseTableName: account
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+      rollback:
+        - dropTable: { tableName: account }
 
   - changeSet:
       id: add-user-index

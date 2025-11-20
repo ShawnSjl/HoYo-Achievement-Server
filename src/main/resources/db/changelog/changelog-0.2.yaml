@@ -1,197 +1,47 @@
 databaseChangeLog:
-  # 1) zzz_achievement
   - changeSet:
-      id: create-zzz-achievement
+      id: create_server_info
       author: ShawnSjl
-      context: "dev,prod"
+      context: "dev, prod"
       preConditions:
         - onFail: MARK_RAN
         - not:
             tableExists:
-              tableName: zzz_achievement
-
+              tableName: server_info
       changes:
         - createTable:
-            tableName: zzz_achievement
+            tableName: server_info
+            remarks: 服务器信息表
             columns:
-              - column:
-                  name: achievement_id
-                  type: INT
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: class_id
-                  type: INT
-                  constraints:
-                    nullable: false
-              - column:
-                  name: name
-                  type: VARCHAR(128)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: description
-                  type: VARCHAR(256)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: reward_level
-                  type: INT
-                  defaultValueNumeric: 1
-              - column:
-                  name: hidden
-                  type: INT
-                  defaultValueNumeric: 0
-              - column:
-                  name: game_version
-                  type: VARCHAR(16)
-                  constraints:
-                    nullable: false
-
+              - column: { name: info_id, type: BIGINT UNSIGNED AUTO_INCREMENT, constraints: { primaryKey: true } }
+              - column: { name: server_version, type: VARCHAR(24), constraints: { nullable: false} }
+              - column: { name: zzz_version, type: VARCHAR(24), constraints: { nullable: false } }
+              - column: { name: sr_version, type: VARCHAR(24), constraints: { nullable: false } }
+              - column: { name: update_description, type: VARCHAR(1024), constraints: { nullable: false } }
+              - column: { name: updated_at, type: DATETIME, defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP }
       rollback:
-        - dropTable:
-            tableName: zzz_achievement
+        - dropTable: { tableName: server_info }
 
-  # 2) zzz_branch
   - changeSet:
-      id: create-zzz-branch
+      id: create_data_migration
       author: ShawnSjl
-      context: "dev,prod"
+      context: "dev, prod"
       preConditions:
         - onFail: MARK_RAN
-        - tableExists: { tableName: zzz_achievement }
         - not:
             tableExists:
-              tableName: zzz_branch
-
+              tableName: data_migration
       changes:
         - createTable:
-            tableName: zzz_branch
+            tableName: data_migration
+            remarks: 数据加载表
             columns:
-              - column:
-                  name: achievement_id
-                  type: INT
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: branch_id
-                  type: INT
-                  constraints:
-                    nullable: false
-
-        - addForeignKeyConstraint:
-            constraintName: fk_zzz_branch_achievement
-            baseTableName: zzz_branch
-            baseColumnNames: achievement_id
-            referencedTableName: zzz_achievement
-            referencedColumnNames: achievement_id
-            onDelete: CASCADE
-            deferrable: false
-            initiallyDeferred: false
-            validate: true
-
+              - column: { name: id, type: BIGINT UNSIGNED AUTO_INCREMENT, constraints: { primaryKey: true } }
+              - column: { name: name, type: VARCHAR(128), constraints: { nullable: false, unique: true } }
+              - column: { name: path, type: VARCHAR(1024), constraints: { nullable: false } }
+              - column: { name: type, type: VARCHAR(16), constraints: { nullable: false } }
+              - column: { name: depends, type: TEXT }
+              - column: { name: migration_time, type: DATETIME, defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE 
+                CURRENT_TIMESTAMP }
       rollback:
-        - dropTable:
-            tableName: zzz_branch
-
-  # 3) zzz_user_record（联合主键 + 外键到 users 与 zzz_achievement）
-  - changeSet:
-      id: create-zzz-user-record
-      author: ShawnSjl
-      context: "dev,prod"
-      preConditions:
-        - onFail: HALT
-        - tableExists: { tableName: zzz_achievement }
-        - tableExists: { tableName: users }
-        - not:
-            tableExists:
-              tableName: zzz_user_record
-
-      changes:
-        - createTable:
-            tableName: zzz_user_record
-            columns:
-              - column:
-                  name: user_uuid
-                  type: VARCHAR(256)
-                  constraints:
-                    nullable: false
-                    unique: true
-              - column:
-                  name: achievement_id
-                  type: INT
-                  constraints:
-                    nullable: false
-              - column:
-                  name: complete
-                  type: INT
-                  defaultValueNumeric: 0
-        - addPrimaryKey:
-            tableName: zzz_user_record
-            columnNames: user_uuid, achievement_id
-            constraintName: pk_zzz_user_record
-
-        - addForeignKeyConstraint:
-            constraintName: fk_zu_user
-            baseTableName: zzz_user_record
-            baseColumnNames: user_uuid
-            referencedTableName: users
-            referencedColumnNames: uuid
-            onDelete: CASCADE
-            deferrable: false
-            initiallyDeferred: false
-            validate: true
-
-        - addForeignKeyConstraint:
-            constraintName: fk_zu_achievement
-            baseTableName: zzz_user_record
-            baseColumnNames: achievement_id
-            referencedTableName: zzz_achievement
-            referencedColumnNames: achievement_id
-            onDelete: CASCADE
-            deferrable: false
-            initiallyDeferred: false
-            validate: true
-
-      rollback:
-        - dropTable:
-            tableName: zzz_user_record
-
-  # 4) zzz_unachievable
-  - changeSet:
-      id: create-zzz-unachievable
-      author: ShawnSjl
-      context: "dev,prod"
-      preConditions:
-        - onFail: MARK_RAN
-        - tableExists: { tableName: zzz_achievement }
-        - not:
-            tableExists:
-              tableName: zzz_unachievable
-
-      changes:
-        - createTable:
-            tableName: zzz_unachievable
-            columns:
-              - column:
-                  name: achievement_id
-                  type: INT
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: class_id
-                  type: INT
-                  constraints:
-                    nullable: false
-              - column:
-                  name: name
-                  type: VARCHAR(128)
-                  constraints:
-                    nullable: false
-
-      rollback:
-        - dropTable:
-            tableName: zzz_unachievable
+        - dropTable: { tableName: data_migration }
