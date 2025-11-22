@@ -16,8 +16,8 @@ public class User {
     private String username;
     private String password;
     private String salt;
-    private UserRole role = UserRole.USER;
-    private UserStatus status = UserStatus.ACTIVE;
+    private UserRole role;
+    private UserStatus status;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime create_time = LocalDateTime.now();
