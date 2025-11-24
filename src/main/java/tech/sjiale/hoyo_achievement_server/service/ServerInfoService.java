@@ -10,5 +10,7 @@ import java.util.Map;
 public interface ServerInfoService extends IService<ServerInfo> {
     ServiceResponse<ServerInfo> getServerInfoById(Integer id);
     ServiceResponse<ServerInfo> getLatestServerInfo();
+
+    // Import use
     ServiceResponse<?> insertServerInfoBatch(List<Map<String, Object>> serverInfoMapList);
 }

@@ -37,7 +37,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
         if (!Files.isDirectory(p)) {
             log.error("Given path is not a directory: {}", dirPath);
         } else {
-            log.info("Start to get migration data in directory: {}", dirPath);
+            log.debug("Start to get migration data in directory: {}", dirPath);
         }
 
         // get all JSON files in the directory
@@ -55,7 +55,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     public ServiceResponse<?> importNewData(String path) {
         Path p = Paths.get(path);
         if (Files.isDirectory(p)) {
-            log.info("Start to get new data in directory: {}", path);
+            log.debug("Start to get new data in directory: {}", path);
             List<String> jsonFiles = findJSONInDirectory(path);
 
             // Return error if no JSON file found in the directory
@@ -78,13 +78,13 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
                 return ServiceResponse.error("No JSON file imported successfully.");
             }
 
-            log.info("Import new data from directory successfully.");
+            log.debug("Import new data from directory successfully.");
             return ServiceResponse.success("Import new data successfully.", successFiles);
         } else if (Files.isRegularFile(p) && path.endsWith(".json")) {
-            log.info("Start to get new data in file: {}", path);
+            log.debug("Start to get new data in file: {}", path);
 
             if (handleJSONFile(path)) {
-                log.info("Import new data successfully.");
+                log.debug("Import new data successfully.");
                 return ServiceResponse.success("Import new data successfully.");
             } else {
                 log.warn("Import new data failed.");

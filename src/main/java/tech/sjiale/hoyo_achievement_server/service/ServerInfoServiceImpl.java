@@ -21,7 +21,8 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
             log.error("id is invalid: {}", id);
             return this.getLatestServerInfo();
         }
-        return ServiceResponse.success("Get server info successfully.", this.getById(id));
+        log.debug("Get server info by ID successfully.");
+        return ServiceResponse.success("Get server info by ID successfully.", this.getById(id));
     }
 
     /** Get the latest server info */
@@ -31,9 +32,11 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
             log.error("No server info found.");
             return ServiceResponse.error("No server info found.");
         }
-        return ServiceResponse.success("Get server info successfully.", res);
+        log.debug("Get latest server info successfully.");
+        return ServiceResponse.success("Get latest server info successfully.", res);
     }
 
+    /** Insert server info batch; should only be called by migration service */
     @Transactional
     public ServiceResponse<?> insertServerInfoBatch(List<Map<String, Object>> serverInfoMapList) {
         for (Map<String, Object> serverInfoMap : serverInfoMapList) {
@@ -54,7 +57,7 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
             serverInfo.setUpdate_description(updateDescription);
             this.save(serverInfo);
         }
-        log.info("Insert server info batch successfully.");
+        log.debug("Insert server info batch successfully.");
         return ServiceResponse.success("Insert server info batch successfully.");
     }
 }
