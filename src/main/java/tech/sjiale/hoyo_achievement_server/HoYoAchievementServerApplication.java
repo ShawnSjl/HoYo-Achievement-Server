@@ -1,12 +1,14 @@
 package tech.sjiale.hoyo_achievement_server;
 
 import cn.dev33.satoken.SaManager;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import lombok.extern.slf4j.Slf4j;
 
 @SpringBootApplication
 @Slf4j
+@MapperScan("tech.sjiale.hoyo_achievement_server.mapper")
 public class HoYoAchievementServerApplication {
 
     public static void main(String[] args) {
