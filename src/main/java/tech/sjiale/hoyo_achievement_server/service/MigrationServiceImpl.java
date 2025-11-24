@@ -1,10 +1,11 @@
 package tech.sjiale.hoyo_achievement_server.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.sjiale.hoyo_achievement_server.dto.MigrationFile;
@@ -27,6 +28,10 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataMigration> implements MigrationService {
 
+    @Autowired
+    @Lazy
+    private MigrationService self;
+
     private final ServerInfoService serverInfoService;
     private final SrAchievementService srAchievementService;
     private final SrBranchService srBranchService;
@@ -34,36 +39,10 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     private final ZzzBranchService zzzBranchService;
 
     /**
-     * Migrate Data when the server starts. Should only be called once.
-     *
-     * @param dirPath directory path; should be a directory
-     */
-    @Transactional
-    public void initialMigration(String dirPath) {
-        // check path is a directory
-        Path p = Paths.get(dirPath);
-        if (!Files.isDirectory(p)) {
-            log.error("Given path is not a directory: {}", dirPath);
-        } else {
-            log.debug("Start to get migration data in directory: {}", dirPath);
-        }
-
-        // get all JSON files in the directory
-        List<String> jsonFiles = findJSONInDirectory(dirPath);
-
-        // handle JSON files
-        for (String jsonFile : jsonFiles) {
-            handleJSONFile(jsonFile);
-        }
-    }
-
-    /**
-     * Import new data from a directory.
-     * Should only be called after initialMigration and server started.
+     * Import new data from a directory or a JSON file.
      *
      * @param path path; could be a directory or a file
      */
-    @Transactional
     public ServiceResponse<?> importNewData(String path) {
         Path p = Paths.get(path);
         if (Files.isDirectory(p)) {
@@ -79,7 +58,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
             // handle JSON files
             List<String> successFiles = new ArrayList<>();
             for (String jsonFile : jsonFiles) {
-                if (handleJSONFile(jsonFile)) {
+                if (self.handleJSONFile(jsonFile)) {
                     successFiles.add(jsonFile);
                 }
             }
@@ -95,7 +74,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
         } else if (Files.isRegularFile(p) && path.endsWith(".json")) {
             log.debug("Start to get new data in file: {}", path);
 
-            if (handleJSONFile(path)) {
+            if (self.handleJSONFile(path)) {
                 log.debug("Import new data successfully.");
                 return ServiceResponse.success("Import new data successfully.");
             } else {
@@ -139,7 +118,13 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
         return foundFiles;
     }
 
-    private boolean handleJSONFile(String jsonFile) {
+    /**
+     * Handle a JSON file; This is a transaction, It will roll back and throw an exception if failed
+     *
+     * @return true if successfully handle the JSON file, false if the format invalid
+     */
+    @Transactional
+    public boolean handleJSONFile(String jsonFile) {
         log.debug("handle JSON file: {}", jsonFile);
 
         ObjectMapper mapper = new ObjectMapper();
@@ -170,7 +155,20 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
 
         // Handle different types of JSON file
         return switch (migrationFile.type()) {
-            case "data", "patch" -> handleJSON(migrationFile, jsonFile);
+            case "data", "patch" -> {
+                // If handle successfully, insert into the database
+                if (handleJSON(migrationFile, jsonFile)) {
+                    DataMigration migration = new DataMigration();
+                    migration.setName(migrationFile.name());
+                    migration.setPath(jsonFile);
+                    migration.setType(migrationFile.type());
+                    migration.setDepends(migrationFile.depends());
+                    this.save(migration);
+                    yield true;
+                } else {
+                    yield false;
+                }
+            }
             default -> {
                 log.error("Unknown migration type '{}' in file {}", migrationFile.type(), jsonFile);
                 yield false;
@@ -178,6 +176,11 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
         };
     }
 
+    /**
+     * Handle JSON with type 'data' or 'patch'; It will throw an exception if failed
+     *
+     * @return true if successfully handle all operations, false if the format invalid
+     */
     private boolean handleJSON(MigrationFile migrationFile, String filePath) {
         log.debug("Handle data file: {}", filePath);
 
@@ -218,6 +221,9 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
         return true;
     }
 
+    /**
+     * Handle insert operation; It will throw an exception if failed
+     */
     private void handleInsert(String table, List<Map<String, Object>> data) {
         ServiceResponse<?> res = switch (table) {
             case "server_info" -> serverInfoService.insertServerInfoBatch(data);

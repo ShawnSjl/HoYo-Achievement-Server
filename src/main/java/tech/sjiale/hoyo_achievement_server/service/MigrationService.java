@@ -5,7 +5,7 @@ import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.DataMigration;
 
 public interface MigrationService extends IService<DataMigration> {
-    void initialMigration(String dirPath);
-
     ServiceResponse<?> importNewData(String path);
+
+    boolean handleJSONFile(String jsonFile);
 }
