@@ -6,12 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tech.sjiale.hoyo_achievement_server.dto.MigrationFile;
 import tech.sjiale.hoyo_achievement_server.dto.MigrationOperation;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.DataMigration;
 import tech.sjiale.hoyo_achievement_server.mapper.DataMigrationMapper;
-import tech.sjiale.hoyo_achievement_server.mapper.ServerInfoMapper;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,12 +25,20 @@ import java.util.stream.Stream;
 @Slf4j
 @Service("migrationService")
 @RequiredArgsConstructor
-public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataMigration> implements MigrationService{
+public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataMigration> implements MigrationService {
 
     private final ServerInfoService serverInfoService;
+    private final SrAchievementService srAchievementService;
+    private final SrBranchService srBranchService;
+    private final ZzzAchievementService zzzAchievementService;
+    private final ZzzBranchService zzzBranchService;
 
-    /** Migrate Data when the server starts. Should only be called once.
-     * @param dirPath directory path; should be a directory */
+    /**
+     * Migrate Data when the server starts. Should only be called once.
+     *
+     * @param dirPath directory path; should be a directory
+     */
+    @Transactional
     public void initialMigration(String dirPath) {
         // check path is a directory
         Path p = Paths.get(dirPath);
@@ -49,9 +57,13 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
         }
     }
 
-    /** Import new data from a directory.
+    /**
+     * Import new data from a directory.
      * Should only be called after initialMigration and server started.
-     * @param path path; could be a directory or a file */
+     *
+     * @param path path; could be a directory or a file
+     */
+    @Transactional
     public ServiceResponse<?> importNewData(String path) {
         Path p = Paths.get(path);
         if (Files.isDirectory(p)) {
@@ -94,6 +106,37 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
             log.error("Given path is not a directory or a JSON file: {}", path);
             return ServiceResponse.error("Given path is not a directory or a JSON file: " + path);
         }
+    }
+
+    /**
+     * Find all JSON files in a directory.
+     * It will check all subdirectories as well.
+     * The maximum depth is 5.
+     *
+     * @param dirPath directory path; should be a directory
+     * @return a list of JSON file paths
+     */
+    private static List<String> findJSONInDirectory(String dirPath) {
+        // parse the directory path, assert it is a directory
+        Path path = Paths.get(dirPath);
+        assert (Files.isDirectory(path));
+
+        // result list
+        List<String> foundFiles = new ArrayList<>();
+
+        // walk through the directory and subdirectories and find all JSON files
+        try (Stream<Path> stream = Files.walk(path, 5)) {
+            stream.forEach(filePath -> {
+                if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".json")) {
+                    foundFiles.add(filePath.toString());
+                    log.debug("found JSON file: {}", filePath);
+                }
+            });
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+
+        return foundFiles;
     }
 
     private boolean handleJSONFile(String jsonFile) {
@@ -158,11 +201,9 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
                 return false;
             }
 
-            switch(operation.action()) {
+            switch (operation.action()) {
                 case "insert":
-                    if(!handleInsert(operation.table(), operation.values())) {
-                        return false;
-                    }
+                    handleInsert(operation.table(), operation.values());
                     break;
 
                 case "update":
@@ -177,43 +218,23 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
         return true;
     }
 
-    private boolean handleInsert(String table, List<Map<String, Object>> data) {
-        switch (table) {
-            case "server_info":
-                ServiceResponse<?> res = serverInfoService.insertServerInfoBatch(data);
-                return res.success();
-            default:
+    private void handleInsert(String table, List<Map<String, Object>> data) {
+        ServiceResponse<?> res = switch (table) {
+            case "server_info" -> serverInfoService.insertServerInfoBatch(data);
+            case "sr_achievement" -> srAchievementService.insertAchievements(data);
+            case "sr_branch" -> srBranchService.insertBranches(data);
+            case "zzz_achievement" -> zzzAchievementService.insertAchievements(data);
+            case "zzz_branch" -> zzzBranchService.insertBranches(data);
+            default -> {
                 log.error("Unknown table type '{}'", table);
-                return false;
+                throw new IllegalArgumentException("Unknown table type '" + table + "'");
+            }
+        };
+
+        // If not success, throw an exception
+        if (!res.success()) {
+            throw new RuntimeException("Insert failed for table: " + table);
         }
-    }
-
-    /** Find all JSON files in a directory.
-     * It will check all subdirectories as well.
-     * The maximum depth is 5.
-     * @param dirPath directory path; should be a directory
-     * @return a list of JSON file paths */
-    private static List<String> findJSONInDirectory(String dirPath) {
-        // parse the directory path, assert it is a directory
-        Path path = Paths.get(dirPath);
-        assert(Files.isDirectory(path));
-
-        // result list
-        List<String> foundFiles = new ArrayList<>();
-
-        // walk through the directory and subdirectories and find all JSON files
-        try (Stream<Path> stream = Files.walk(path, 5)) {
-            stream.forEach(filePath -> {
-                if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".json")) {
-                    foundFiles.add(filePath.toString());
-                    log.debug("found JSON file: {}", filePath);
-                }
-            });
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
-
-        return foundFiles;
     }
 
 }

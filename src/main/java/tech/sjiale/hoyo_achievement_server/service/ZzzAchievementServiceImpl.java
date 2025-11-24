@@ -47,7 +47,7 @@ public class ZzzAchievementServiceImpl extends ServiceImpl<ZzzAchievementMapper,
             if (achievementId == null || classId == null || name == null || description == null || rewardLevel == null || hidden == null || gameVersion == null) {
                 log.error("Invalid achievement data: achievement_id={}, class={}, name={}, description={}, " +
                         "reward_level={}, hidden={}, game_version={}", achievementId, classId, name, description, rewardLevel, hidden, gameVersion);
-                return ServiceResponse.error("Invalid achievement data.");
+                throw new IllegalArgumentException("Invalid achievement data.");
             }
 
             ZzzAchievement achievement = new ZzzAchievement();

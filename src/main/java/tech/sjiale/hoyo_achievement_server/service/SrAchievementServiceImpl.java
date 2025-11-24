@@ -46,7 +46,7 @@ public class SrAchievementServiceImpl extends ServiceImpl<SrAchievementMapper, S
 
             if (achievementId == null || className == null || name == null || description == null || rewardLevel == null || hidden == null || gameVersion == null) {
                 log.error("Invalid achievement data: achievement_id={}, class={}, name={}, description={}, reward_level={}, hidden={}, game_version={}", achievementId, className, name, description, rewardLevel, hidden, gameVersion);
-                return ServiceResponse.error("Invalid achievement data.");
+                throw new IllegalArgumentException("Invalid achievement data.");
             }
 
             SrAchievement achievement = new SrAchievement();

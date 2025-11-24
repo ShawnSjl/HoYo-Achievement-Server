@@ -41,7 +41,7 @@ public class ZzzBranchServiceImpl extends ServiceImpl<ZzzBranchMapper, ZzzBranch
 
             if (achievementId == null || branchId == null) {
                 log.error("Invalid branch data: achievement_id={}, branch_id={}", achievementId, branchId);
-                return ServiceResponse.error("Invalid branch data.");
+                throw new IllegalArgumentException("Invalid branch data.");
             }
 
             ZzzBranch branch = new ZzzBranch();

@@ -41,7 +41,7 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
 
             if (achievementId == null || branchId == null) {
                 log.error("Invalid branch data: achievement_id={}, branch_id={}", achievementId, branchId);
-                return ServiceResponse.error("Invalid branch data.");
+                throw new IllegalArgumentException("Invalid branch data.");
             }
 
             SrBranch branch = new SrBranch();

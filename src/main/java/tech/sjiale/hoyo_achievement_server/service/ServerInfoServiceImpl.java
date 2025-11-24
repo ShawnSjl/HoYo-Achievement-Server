@@ -13,9 +13,11 @@ import java.util.Map;
 
 @Slf4j
 @Service("serverInfoService")
-public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerInfo> implements ServerInfoService{
+public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerInfo> implements ServerInfoService {
 
-    /** Get the server info by id; if id is invalid, return the latest server info */
+    /**
+     * Get the server info by id; if id is invalid, return the latest server info
+     */
     public ServiceResponse<ServerInfo> getServerInfoById(Integer id) {
         if (id == null || id <= 0) {
             log.error("id is invalid: {}", id);
@@ -25,7 +27,9 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
         return ServiceResponse.success("Get server info by ID successfully.", this.getById(id));
     }
 
-    /** Get the latest server info */
+    /**
+     * Get the latest server info
+     */
     public ServiceResponse<ServerInfo> getLatestServerInfo() {
         ServerInfo res = this.lambdaQuery().orderByDesc(ServerInfo::getInfo_id).last("LIMIT 1").one();
         if (res == null) {
@@ -36,7 +40,9 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
         return ServiceResponse.success("Get latest server info successfully.", res);
     }
 
-    /** Insert server info batch; should only be called by migration service */
+    /**
+     * Insert server info batch; should only be called by migration service
+     */
     @Transactional
     public ServiceResponse<?> insertServerInfoBatch(List<Map<String, Object>> serverInfoMapList) {
         for (Map<String, Object> serverInfoMap : serverInfoMapList) {
@@ -47,7 +53,7 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
 
             if (serverVersion == null || zzzVersion == null || srVersion == null || updateDescription == null) {
                 log.error("Invalid server info: server_version={}, zzz_version={}, sr_version={}, update_description={}", serverVersion, zzzVersion, srVersion, updateDescription);
-                return ServiceResponse.error("Invalid server info data.");
+                throw new IllegalArgumentException("Invalid server info.");
             }
 
             ServerInfo serverInfo = new ServerInfo();
