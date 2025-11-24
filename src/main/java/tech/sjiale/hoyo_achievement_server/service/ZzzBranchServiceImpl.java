@@ -5,33 +5,33 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
-import tech.sjiale.hoyo_achievement_server.entity.SrBranch;
-import tech.sjiale.hoyo_achievement_server.mapper.SrBranchMapper;
+import tech.sjiale.hoyo_achievement_server.entity.ZzzBranch;
+import tech.sjiale.hoyo_achievement_server.mapper.ZzzBranchMapper;
 
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
-@Service("srBranchService")
-public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> implements SrBranchService {
+@Service("zzzBranchService")
+public class ZzzBranchServiceImpl extends ServiceImpl<ZzzBranchMapper, ZzzBranch> implements ZzzBranchService {
 
     /**
-     * Get all SR branches
+     * Get all ZZZ branches
      */
-    public ServiceResponse<List<SrBranch>> getAllBranches() {
-        List<SrBranch> branches = this.list();
+    public ServiceResponse<List<ZzzBranch>> getAllBranches() {
+        List<ZzzBranch> branches = this.list();
 
         if (branches == null || branches.isEmpty()) {
-            log.error("No SR branches found.");
-            return ServiceResponse.error("No SR branches found.");
+            log.error("No ZZZ branches found.");
+            return ServiceResponse.error("No ZZZ branches found.");
         }
 
-        log.debug("Get all SR branches successfully.");
-        return ServiceResponse.success("Get all SR branches successfully.", branches);
+        log.debug("Get all ZZZ branches successfully.");
+        return ServiceResponse.success("Get all ZZZ branches successfully.", branches);
     }
 
     /**
-     * Insert SR branches; should only be called by migration service
+     * Insert ZZZ branches; should only be called by migration service
      */
     @Transactional
     public ServiceResponse<?> insertBranches(List<Map<String, Object>> branchMapList) {
@@ -44,12 +44,12 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
                 return ServiceResponse.error("Invalid branch data.");
             }
 
-            SrBranch branch = new SrBranch();
+            ZzzBranch branch = new ZzzBranch();
             branch.setAchievement_id(achievementId);
             branch.setBranch_id(branchId);
             this.save(branch);
         }
-        log.debug("Insert SR branches successfully.");
-        return ServiceResponse.success("Insert SR branches successfully.");
+        log.debug("Insert ZZZ branches successfully.");
+        return ServiceResponse.success("Insert ZZZ branches successfully.");
     }
 }
