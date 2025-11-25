@@ -10,6 +10,8 @@ import java.util.Map;
 public interface ZzzBranchService extends IService<ZzzBranch> {
     ServiceResponse<List<ZzzBranch>> getAllBranches();
 
+    ServiceResponse<List<Integer>> getAchievementInSameBranch(Integer achievementId);
+
     // Import use
     ServiceResponse<?> insertBranches(List<Map<String, Object>> branchMapList);
 }
