@@ -32,7 +32,7 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
     }
 
     /**
-     * Get all achievement ids in the same branch as the given achievement id; return empty list if achievement is
+     * Get all SR achievement ids in the same branch as the given achievement id; return empty list if achievement is
      * not in a branch
      */
     public ServiceResponse<List<Integer>> getAchievementInSameBranch(Integer achievementId) {
@@ -53,7 +53,8 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
                 .stream()
                 .map(SrBranch::getAchievement_id)
                 .toList();
-        return ServiceResponse.success("Get SR branches successfully.", achievementIds);
+        log.debug("Get SR achievement ids in the same branch successfully.");
+        return ServiceResponse.success("Get SR achievement ids in the same branch successfully.", achievementIds);
     }
 
     /**

@@ -15,7 +15,7 @@ import java.util.Map;
 @Slf4j
 @Service("srAchievementService")
 public class SrAchievementServiceImpl extends ServiceImpl<SrAchievementMapper, SrAchievement> implements SrAchievementService {
-    
+
     /**
      * Get SR achievement by id
      */
@@ -23,7 +23,7 @@ public class SrAchievementServiceImpl extends ServiceImpl<SrAchievementMapper, S
         // Get achievement by id
         BasicAchievementDto achievement = this.baseMapper.getBasicById(achievementId);
         if (achievement == null) {
-            log.error("No achievement found with id: {}", achievementId);
+            log.error("No SR achievement found with id: {}", achievementId);
             return ServiceResponse.error("No achievement found with id: " + achievementId);
         }
 

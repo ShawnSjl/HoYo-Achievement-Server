@@ -1,6 +1,5 @@
 package tech.sjiale.hoyo_achievement_server.dto;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 @Data

@@ -44,7 +44,6 @@ public class SrUserRecordServiceImpl extends ServiceImpl<SrUserRecordMapper, SrU
      */
     @Transactional
     public ServiceResponse<Boolean> updateRecordById(String uuid, Integer achievementId, Integer completeStatus) {
-
         // Check if account exists
         if (!accountService.getAccountByUuid(uuid).success()) {
             log.error("Account uuid doesn't exist: {}", uuid);
@@ -54,7 +53,7 @@ public class SrUserRecordServiceImpl extends ServiceImpl<SrUserRecordMapper, SrU
         // Check if achievement exists
         if (!srAchievementService.getAchievementById(achievementId).success()) {
             log.error("Achievement id doesn't exist: {}", achievementId);
-            throw new IllegalArgumentException("Achievement id doesn't exist.");
+            throw new IllegalArgumentException("SR Achievement id doesn't exist.");
         }
 
         // Update current achievement record
@@ -68,9 +67,10 @@ public class SrUserRecordServiceImpl extends ServiceImpl<SrUserRecordMapper, SrU
                 updateRecord(uuid, achievement, branchStatus);
             }
         } else {
-            throw new RuntimeException("Failed to get achievements in same branch.");
+            throw new RuntimeException("Failed to get SR achievements in same branch.");
         }
 
+        log.debug("Update SR achievement record successfully.");
         return ServiceResponse.success("Update SR achievement record successfully.", true);
     }
 
