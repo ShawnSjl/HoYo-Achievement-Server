@@ -8,6 +8,7 @@ import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.SrBranch;
 import tech.sjiale.hoyo_achievement_server.mapper.SrBranchMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +29,31 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
 
         log.debug("Get all SR branches successfully.");
         return ServiceResponse.success("Get all SR branches successfully.", branches);
+    }
+
+    /**
+     * Get all achievement ids in the same branch as the given achievement id; return empty list if achievement is
+     * not in a branch
+     */
+    public ServiceResponse<List<Integer>> getAchievementInSameBranch(Integer achievementId) {
+        // Get SR branches by achievement id, return empty list if achievement is not in a branch
+        SrBranch srBranch = this.lambdaQuery().eq(SrBranch::getAchievement_id, achievementId).one();
+        if (srBranch == null) {
+            log.debug("No SR branch found for achievement id: {}", achievementId);
+            List<Integer> list = new ArrayList<>();
+            return ServiceResponse.success("No SR branch found for achievement id: " + achievementId, list);
+        }
+
+        // Get other achievement ids in the same branch
+        List<Integer> achievementIds = this.lambdaQuery()
+                .select(SrBranch::getAchievement_id)
+                .eq(SrBranch::getBranch_id, srBranch.getBranch_id())
+                .ne(SrBranch::getAchievement_id, achievementId)
+                .list()
+                .stream()
+                .map(SrBranch::getAchievement_id)
+                .toList();
+        return ServiceResponse.success("Get SR branches successfully.", achievementIds);
     }
 
     /**

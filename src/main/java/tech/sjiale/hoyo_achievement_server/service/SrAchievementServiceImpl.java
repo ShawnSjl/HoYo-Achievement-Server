@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tech.sjiale.hoyo_achievement_server.dto.BasicAchievementDto;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.SrAchievement;
 import tech.sjiale.hoyo_achievement_server.mapper.SrAchievementMapper;
@@ -14,20 +15,20 @@ import java.util.Map;
 @Slf4j
 @Service("srAchievementService")
 public class SrAchievementServiceImpl extends ServiceImpl<SrAchievementMapper, SrAchievement> implements SrAchievementService {
-
+    
     /**
-     * Get all SR achievements
+     * Get SR achievement by id
      */
-    public ServiceResponse<List<SrAchievement>> getAllAchievements() {
-        List<SrAchievement> achievements = this.list();
-
-        if (achievements == null || achievements.isEmpty()) {
-            log.error("No SR achievements found.");
-            return ServiceResponse.error("No SR achievements found.");
+    public ServiceResponse<BasicAchievementDto> getAchievementById(Integer achievementId) {
+        // Get achievement by id
+        BasicAchievementDto achievement = this.baseMapper.getBasicById(achievementId);
+        if (achievement == null) {
+            log.error("No achievement found with id: {}", achievementId);
+            return ServiceResponse.error("No achievement found with id: " + achievementId);
         }
 
-        log.debug("Get all SR achievements successfully.");
-        return ServiceResponse.success("Get all SR achievements successfully.", achievements);
+        log.debug("Get SR achievement by id successfully.");
+        return ServiceResponse.success("Get SR achievement by id successfully.", achievement);
     }
 
     /**
