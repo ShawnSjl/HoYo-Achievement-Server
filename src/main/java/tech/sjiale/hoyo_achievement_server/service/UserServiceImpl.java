@@ -1,12 +1,14 @@
 package tech.sjiale.hoyo_achievement_server.service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
+import tech.sjiale.hoyo_achievement_server.entity.Account;
 import tech.sjiale.hoyo_achievement_server.entity.User;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserRole;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserStatus;
@@ -16,11 +18,15 @@ import java.util.List;
 
 @Slf4j
 @Service("userService")
+@RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    private final AccountService accountService;
+
     /**
      * Get user by id
      */
-    public ServiceResponse<User> getUserById(Integer id) {
+    public ServiceResponse<User> getUserById(Long id) {
         User user = getById(id);
         if (user == null) {
             log.error("User id {} doesn't exist.", id);
@@ -81,7 +87,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * Update username
      */
     @Transactional
-    public ServiceResponse<?> updateUsername(Integer id, String newUsername) {
+    public ServiceResponse<?> updateUsername(Long id, String newUsername) {
         // Check if username already exists
         ServiceResponse<User> response = getUserByName(newUsername);
         if (response.success()) {
@@ -98,7 +104,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * Update user password
      */
     @Transactional
-    public ServiceResponse<?> updatePassword(Integer id, String newPassword) {
+    public ServiceResponse<?> updatePassword(Long id, String newPassword) {
         // TODO: check password format
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String hashedPassword = passwordEncoder.encode(newPassword);
@@ -111,7 +117,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * Update user status
      */
     @Transactional
-    public ServiceResponse<?> updateUserStatus(Integer id, UserStatus status) {
+    public ServiceResponse<?> updateUserStatus(Long id, UserStatus status) {
         // Check if user exists
         ServiceResponse<User> response = getUserById(id);
         if (!response.success()) {
@@ -136,7 +142,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * Update user role
      */
     @Transactional
-    public ServiceResponse<?> updateUserRole(Integer id, UserRole role) {
+    public ServiceResponse<?> updateUserRole(Long id, UserRole role) {
         // Check if user exists
         ServiceResponse<User> response = getUserById(id);
         if (!response.success()) {
@@ -158,5 +164,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         log.debug("Update user role successfully.");
         return ServiceResponse.success("Update user role successfully.");
+    }
+
+    /**
+     * Delete user
+     */
+    @Transactional
+    public ServiceResponse<?> deleteUser(Long id) {
+        ServiceResponse<List<Account>> response = accountService.getAllAccountsByUserId(id);
+        if (!response.success()) {
+            log.debug("No account found for user id: {}.", id);
+        } else {
+            for (Account account : response.data()) {
+                accountService.deleteAccount(account.getAccount_uuid());
+            }
+        }
+
+        boolean removed = this.removeById(id);
+        if (removed) {
+            log.debug("Delete user {} successfully.", id);
+            return ServiceResponse.success("Delete user successfully.");
+        } else {
+            log.error("Delete user {} failed.", id);
+            throw new RuntimeException("Delete user failed.");
+        }
     }
 }

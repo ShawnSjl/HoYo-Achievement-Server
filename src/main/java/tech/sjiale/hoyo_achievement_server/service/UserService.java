@@ -9,7 +9,7 @@ import tech.sjiale.hoyo_achievement_server.entity.nume.UserStatus;
 import java.util.List;
 
 public interface UserService extends IService<User> {
-    ServiceResponse<User> getUserById(Integer id);
+    ServiceResponse<User> getUserById(Long id);
 
     ServiceResponse<User> getUserByName(String name);
 
@@ -17,11 +17,13 @@ public interface UserService extends IService<User> {
 
     ServiceResponse<?> createUser(String username, String password);
 
-    ServiceResponse<?> updateUsername(Integer id, String newUsername);
+    ServiceResponse<?> updateUsername(Long id, String newUsername);
 
-    ServiceResponse<?> updatePassword(Integer id, String newPassword);
+    ServiceResponse<?> updatePassword(Long id, String newPassword);
 
-    ServiceResponse<?> updateUserStatus(Integer id, UserStatus status);
+    ServiceResponse<?> updateUserStatus(Long id, UserStatus status);
 
-    ServiceResponse<?> updateUserRole(Integer id, UserRole role);
+    ServiceResponse<?> updateUserRole(Long id, UserRole role);
+
+    ServiceResponse<?> deleteUser(Long id);
 }
