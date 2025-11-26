@@ -25,6 +25,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     /**
      * Get user by id
+     *
+     * @param id user id
+     * @return ServiceResponse with a User object
      */
     public ServiceResponse<User> getUserById(Long id) {
         User user = getById(id);
@@ -38,6 +41,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     /**
      * Get user by username
+     *
+     * @param name username
+     * @return ServiceResponse with a User object
      */
     public ServiceResponse<User> getUserByName(String name) {
         User user = this.lambdaQuery().eq(User::getUsername, name).one();
@@ -50,109 +56,174 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * Get all users
+     * Get all users; should only be called by admin
+     *
+     * @return ServiceResponse with a list of User objects
      */
     public ServiceResponse<List<User>> getAllUsers() {
         List<User> users = this.list();
+        if (users == null || users.isEmpty()) {
+            log.error("No user found.");
+            return ServiceResponse.error("No user found.");
+        }
         log.debug("Get all users successfully.");
         return ServiceResponse.success("Get all users successfully.", users);
     }
 
     /**
-     * Create new user
+     * Create a new user; should only be called by admin
+     *
+     * @param username username
+     * @param password password
+     * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<?> createUser(String username, String password) {
-        // Check if username already exists
+        // Check if the username already exists
         ServiceResponse<User> response = getUserByName(username);
         if (response.success()) {
             log.error("Username already exists: {}", username);
             throw new IllegalArgumentException("Username already exists.");
         }
 
+        // Create a new user
         User user = new User();
         user.setUsername(username);
 
-        // TODO: check password format
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String hashedPassword = passwordEncoder.encode(password);
         user.setPassword(hashedPassword);
 
-        this.save(user);
-        log.debug("Create user {} successfully.", username);
-        return ServiceResponse.success("Create user successfully.", user);
+        // Save the new user
+        boolean success = this.save(user);
+        if (success) {
+            log.debug("Create user {} successfully.", username);
+            return ServiceResponse.success("Create user successfully.", user);
+        } else {
+            log.error("Create user {} failed.", username);
+            throw new RuntimeException("Create user failed.");
+        }
     }
 
     /**
-     * Update username
+     * Update username; should only be called by the user itself
+     *
+     * @param id          user id
+     * @param newUsername new username
+     * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<?> updateUsername(Long id, String newUsername) {
-        // Check if username already exists
+        // Check if the username already exists
         ServiceResponse<User> response = getUserByName(newUsername);
         if (response.success()) {
             log.error("New username already exists: {}", newUsername);
             throw new IllegalArgumentException("New username already exists.");
         }
 
-        this.lambdaUpdate().eq(User::getId, id).set(User::getUsername, newUsername).update();
-        log.debug("Update username {} successfully.", newUsername);
-        return ServiceResponse.success("Update username successfully.");
+        // Update username
+        boolean updated = this.lambdaUpdate()
+                .eq(User::getId, id)
+                .set(User::getUsername, newUsername)
+                .update();
+        if (updated) {
+            log.debug("Update username {} successfully.", newUsername);
+            return ServiceResponse.success("Update username successfully.");
+        } else {
+            log.error("Update username {} failed.", newUsername);
+            throw new RuntimeException("Update username failed.");
+        }
     }
 
     /**
-     * Update user password
+     * Update user password; should only be called by the user itself
+     *
+     * @param id          user id
+     * @param newPassword new password
+     * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<?> updatePassword(Long id, String newPassword) {
-        // TODO: check password format
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String hashedPassword = passwordEncoder.encode(newPassword);
-        this.lambdaUpdate().eq(User::getId, id).set(User::getPassword, hashedPassword).update();
-        log.debug("Update password successfully.");
-        return ServiceResponse.success("Update password successfully.");
+
+        // Update password
+        boolean updated = this.lambdaUpdate()
+                .eq(User::getId, id)
+                .set(User::getPassword, hashedPassword)
+                .update();
+        if (updated) {
+            log.debug("Update password successfully.");
+            return ServiceResponse.success("Update password successfully.");
+        } else {
+            log.error("Update password failed.");
+            throw new RuntimeException("Update password failed.");
+        }
     }
 
     /**
-     * Update user status
+     * Update user status, cannot disable an admin account; should only be called by admin
+     *
+     * @param id     user id
+     * @param status new status
+     * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<?> updateUserStatus(Long id, UserStatus status) {
-        // Check if user exists
+        // Check if the user exists
         ServiceResponse<User> response = getUserById(id);
         if (!response.success()) {
             log.error("Target user {} doesn't exist.", id);
             throw new IllegalArgumentException("Target user doesn't exist.");
         }
 
-        // Check if user is admin
+        // Check if the user is admin
         if (response.data().getRole() == UserRole.ADMIN) {
             log.error("Admin user cannot be disabled.");
             throw new IllegalArgumentException("Admin user cannot be disabled.");
         }
 
         // Update user status
-        this.lambdaUpdate().eq(User::getId, id).set(User::getStatus, status).update();
-
-        log.debug("Update user status successfully.");
-        return ServiceResponse.success("Update user status successfully.");
+        boolean updated = this.lambdaUpdate()
+                .eq(User::getId, id)
+                .set(User::getStatus, status)
+                .update();
+        if (updated) {
+            log.debug("Update user status successfully.");
+            return ServiceResponse.success("Update user status successfully.");
+        } else {
+            log.error("Update user status failed.");
+            throw new RuntimeException("Update user status failed.");
+        }
     }
 
     /**
-     * Update user role
+     * Update user role; should only be called by admin
+     *
+     * @param id   user id
+     * @param role new role
+     * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<?> updateUserRole(Long id, UserRole role) {
-        // Check if user exists
+        // Check if the user exists
         ServiceResponse<User> response = getUserById(id);
         if (!response.success()) {
             log.error("Target user {} doesn't exist.", id);
             throw new IllegalArgumentException("Target user doesn't exist.");
         }
 
-        this.lambdaUpdate().eq(User::getId, id).set(User::getRole, role).update();
+        // Update user role
+        boolean updated = this.lambdaUpdate()
+                .eq(User::getId, id)
+                .set(User::getRole, role)
+                .update();
+        if (!updated) {
+            log.error("Update user role failed.");
+            throw new RuntimeException("Update user role failed.");
+        }
 
-        // Check number of admin user after this transaction
+        // Check the number of admin users after this transaction
         Long adminNumber = this.lambdaQuery().eq(User::getStatus, UserRole.ADMIN).count();
         if (adminNumber < 1) {
             log.error("Number of admin user should be at least 1.");
@@ -167,10 +238,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * Delete user
+     * Delete user; should only be called by the user itself
+     *
+     * @param id user id
+     * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<?> deleteUser(Long id) {
+        // Delete all accounts associated with the user
         ServiceResponse<List<Account>> response = accountService.getAllAccountsByUserId(id);
         if (!response.success()) {
             log.debug("No account found for user id: {}.", id);
@@ -180,6 +255,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         }
 
+        // Delete user
         boolean removed = this.removeById(id);
         if (removed) {
             log.debug("Delete user {} successfully.", id);

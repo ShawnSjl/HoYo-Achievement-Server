@@ -17,6 +17,9 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
 
     /**
      * Get account by uuid
+     *
+     * @param uuid account uuid
+     * @return ServiceResponse with an Account object
      */
     public ServiceResponse<Account> getAccountByUuid(String uuid) {
         Account account = this.lambdaQuery()
@@ -33,6 +36,9 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
 
     /**
      * Get all accounts by user id
+     *
+     * @param userId user id
+     * @return ServiceResponse with a list of Account objects
      */
     public ServiceResponse<List<Account>> getAllAccountsByUserId(Long userId) {
         List<Account> accounts = this.lambdaQuery().eq(Account::getUser_id, userId).list();
@@ -46,7 +52,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     }
 
     /**
-     * Create new account
+     * Create a new account; should only be called by the user itself
      *
      * @param userId           user id
      * @param uuid             account uuid
@@ -58,14 +64,14 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     @Transactional
     public ServiceResponse<?> createAccount(Long userId, String uuid, GameType gameType, String accountName,
                                             String accountInGameUid) {
-        // Check uniqueness of uuid
+        // Check the uniqueness of uuid
         ServiceResponse<Account> response = getAccountByUuid(uuid);
         if (response.success()) {
             log.error("Account already exists for uuid: {}.", uuid);
             throw new IllegalArgumentException("Account already exists.");
         }
 
-        // Create new account
+        // Create a new account
         Account account = new Account();
         account.setAccount_uuid(uuid);
         account.setUser_id(userId);
@@ -75,7 +81,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
             account.setAccount_in_game_uid(accountInGameUid);
         }
 
-        // Save new account
+        // Save the new account
         boolean success = this.save(account);
         if (success) {
             log.debug("Create account successfully.");
@@ -87,7 +93,11 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     }
 
     /**
-     * Update account name
+     * Update account name; should only be called by the user itself
+     *
+     * @param uuid    account uuid
+     * @param newName new account name
+     * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<?> updateAccountName(String uuid, String newName) {
@@ -106,7 +116,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     }
 
     /**
-     * Update account in game uid
+     * Update account in game uid; should only be called by the user itself
      *
      * @param uuid account uuid
      * @return ServiceResponse
@@ -128,14 +138,14 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     }
 
     /**
-     * Delete account by uuid
+     * Delete an account by account uuid; should only be called by the user itself
      *
      * @param uuid account uuid
      * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<?> deleteAccount(String uuid) {
-        // Delete account
+        // Delete an account
         boolean removed = this.lambdaUpdate()
                 .eq(Account::getAccount_uuid, uuid)
                 .remove();
