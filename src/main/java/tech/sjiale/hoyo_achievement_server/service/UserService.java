@@ -26,4 +26,6 @@ public interface UserService extends IService<User> {
     ServiceResponse<?> updateUserRole(Long id, UserRole role);
 
     ServiceResponse<?> deleteUser(Long id);
+
+    ServiceResponse<?> createRootUser(String username, String password);
 }

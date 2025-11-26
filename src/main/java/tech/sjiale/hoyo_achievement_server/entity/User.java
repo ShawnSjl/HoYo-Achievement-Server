@@ -19,8 +19,8 @@ public class User {
     private UserStatus status;
 
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime create_time = LocalDateTime.now();
+    private LocalDateTime created_at = LocalDateTime.now();
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime update_time = LocalDateTime.now();
+    private LocalDateTime updated_at = LocalDateTime.now();
 }

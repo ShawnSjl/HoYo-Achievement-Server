@@ -56,7 +56,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * Get all users; should only be called by admin
+     * Get all users; should only be called by admin or root
      *
      * @return ServiceResponse with a list of User objects
      */
@@ -71,7 +71,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * Create a new user; should only be called by admin
+     * Create a new user; should only be called by admin or root
      *
      * @param username username
      * @param password password
@@ -162,7 +162,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * Update user status, cannot disable an admin account; should only be called by admin
+     * Update user status, cannot disable an admin or root account; should only be called by admin and root
      *
      * @param id     user id
      * @param status new status
@@ -177,10 +177,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new IllegalArgumentException("Target user doesn't exist, update status failed.");
         }
 
-        // Check if the user is admin
-        if (response.data().getRole() == UserRole.ADMIN) {
-            log.error("Admin user cannot be disabled.");
-            throw new IllegalArgumentException("Admin user cannot be disabled.");
+        // Check if the user is admin or root
+        if (response.data().getRole() == UserRole.ADMIN || response.data().getRole() == UserRole.ROOT) {
+            log.error("Admin or root user cannot be disabled.");
+            throw new IllegalArgumentException("Admin or root user cannot be disabled.");
         }
 
         // Update user status
@@ -198,7 +198,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * Update user role; should only be called by admin
+     * Update user role; should only be called by admin or root
      *
      * @param id   user id
      * @param role new role
@@ -206,6 +206,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Transactional
     public ServiceResponse<?> updateUserRole(Long id, UserRole role) {
+        // Cannot set to root
+        if (role == UserRole.ROOT) {
+            log.error("Root cannot be assigned to user.");
+            throw new IllegalArgumentException("Root cannot be assigned to user.");
+        }
+
         // Check if the user exists
         ServiceResponse<User> response = getUserById(id);
         if (!response.success()) {
@@ -238,13 +244,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * Delete user; should only be called by the user itself
+     * Delete user, cannot delete root user; should only be called by the user itself
      *
      * @param id user id
      * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<?> deleteUser(Long id) {
+        // Cannot delete root user
+        User user = this.getById(id);
+        if (user != null && user.getRole() == UserRole.ROOT) {
+            log.error("Root user cannot be deleted.");
+            throw new IllegalArgumentException("Root user cannot be deleted.");
+        }
+
         // Delete all accounts associated with the user
         ServiceResponse<List<Account>> response = accountService.getAllAccountsByUserId(id);
         if (!response.success()) {
@@ -263,6 +276,44 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         } else {
             log.error("Delete user {} failed.", id);
             throw new RuntimeException("Delete user failed.");
+        }
+    }
+
+    /**
+     * Create a root user; should only be called by the system initialization script
+     *
+     * @param username username
+     * @param password password
+     * @return ServiceResponse
+     */
+    @Transactional
+    public ServiceResponse<?> createRootUser(String username, String password) {
+        // Check if the root already exists
+        ServiceResponse<User> response = getUserByName(username);
+        if (response.success()) {
+            log.debug("Root already exists: {}", username);
+            return ServiceResponse.success("Root already exists.");
+        }
+
+        // Create a new root user
+        User root = new User();
+        root.setUsername(username);
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String hashedPassword = passwordEncoder.encode(password);
+        root.setPassword(hashedPassword);
+
+        root.setRole(UserRole.ROOT);
+        root.setStatus(UserStatus.ACTIVE);
+
+        // Save the new root user
+        boolean success = this.save(root);
+        if (success) {
+            log.debug("Create root user {} successfully.", username);
+            return ServiceResponse.success("Create root user successfully.", root);
+        } else {
+            log.error("Create root user {} failed.", username);
+            throw new RuntimeException("Create root user failed.");
         }
     }
 }
