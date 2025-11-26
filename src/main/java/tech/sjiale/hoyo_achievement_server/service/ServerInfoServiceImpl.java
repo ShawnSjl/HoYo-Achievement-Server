@@ -17,6 +17,9 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
 
     /**
      * Get the server info by id; if id is invalid, return the latest server info
+     *
+     * @param id server info id
+     * @return ServiceResponse with ServerInfo object
      */
     public ServiceResponse<ServerInfo> getServerInfoById(Integer id) {
         if (id == null || id <= 0) {
@@ -29,9 +32,14 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
 
     /**
      * Get the latest server info
+     *
+     * @return ServiceResponse with ServerInfo object
      */
     public ServiceResponse<ServerInfo> getLatestServerInfo() {
-        ServerInfo res = this.lambdaQuery().orderByDesc(ServerInfo::getInfo_id).last("LIMIT 1").one();
+        ServerInfo res = this.lambdaQuery()
+                .orderByDesc(ServerInfo::getInfo_id)
+                .last("LIMIT 1")
+                .one();
         if (res == null) {
             log.error("No server info found.");
             return ServiceResponse.error("No server info found.");
@@ -42,6 +50,9 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
 
     /**
      * Insert server info batch; should only be called by migration service
+     *
+     * @param serverInfoMapList list of the server info map
+     * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<?> insertServerInfoBatch(List<Map<String, Object>> serverInfoMapList) {

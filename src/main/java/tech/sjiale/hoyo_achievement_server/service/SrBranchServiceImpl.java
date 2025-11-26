@@ -8,7 +8,6 @@ import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.SrBranch;
 import tech.sjiale.hoyo_achievement_server.mapper.SrBranchMapper;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +17,8 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
 
     /**
      * Get all SR branches
+     *
+     * @return List of SR branches
      */
     public ServiceResponse<List<SrBranch>> getAllBranches() {
         List<SrBranch> branches = this.list();
@@ -32,22 +33,28 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
     }
 
     /**
-     * Get all SR achievement ids in the same branch as the given achievement id; return empty list if achievement is
-     * not in a branch
+     * Get all SR achievement ids in the same branch as the given achievement id; return an empty list if
+     * the achievement is not in a branch
+     *
+     * @param achievementId achievement id
+     * @return List of achievement ids
      */
     public ServiceResponse<List<Integer>> getAchievementInSameBranch(Integer achievementId) {
-        // Get SR branches by achievement id, return empty list if achievement is not in a branch
-        SrBranch srBranch = this.lambdaQuery().eq(SrBranch::getAchievement_id, achievementId).one();
-        if (srBranch == null) {
+        // Get SR branche id by achievement id, return an empty list if the achievement is not in a branch
+        Integer branchId = this.lambdaQuery()
+                .eq(SrBranch::getAchievement_id, achievementId)
+                .oneOpt()
+                .map(SrBranch::getBranch_id)
+                .orElse(null);
+        if (branchId == null) {
             log.debug("No SR branch found for achievement id: {}", achievementId);
-            List<Integer> list = new ArrayList<>();
-            return ServiceResponse.success("No SR branch found for achievement id: " + achievementId, list);
+            return ServiceResponse.success("No SR branch found for achievement id: " + achievementId, List.of());
         }
 
         // Get other achievement ids in the same branch
         List<Integer> achievementIds = this.lambdaQuery()
                 .select(SrBranch::getAchievement_id)
-                .eq(SrBranch::getBranch_id, srBranch.getBranch_id())
+                .eq(SrBranch::getBranch_id, branchId)
                 .ne(SrBranch::getAchievement_id, achievementId)
                 .list()
                 .stream()
@@ -59,6 +66,9 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
 
     /**
      * Insert SR branches; should only be called by migration service
+     *
+     * @param branchMapList List of branch data
+     * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<?> insertBranches(List<Map<String, Object>> branchMapList) {

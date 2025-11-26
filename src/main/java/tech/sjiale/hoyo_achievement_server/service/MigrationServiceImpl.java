@@ -42,6 +42,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
      * Import new data from a directory or a JSON file.
      *
      * @param path path; could be a directory or a file
+     * @return ServiceResponse
      */
     public ServiceResponse<?> importNewData(String path) {
         Path p = Paths.get(path);
@@ -121,6 +122,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     /**
      * Handle a JSON file; This is a transaction, It will roll back and throw an exception if failed
      *
+     * @param jsonFile JSON file path
      * @return true if successfully handle the JSON file, false if the format invalid
      */
     @Transactional
@@ -153,6 +155,17 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
             return false;
         }
 
+        // Check if the migration file has been imported before
+        {
+            DataMigration migration = this.lambdaQuery()
+                    .eq(DataMigration::getName, migrationFile.name())
+                    .one();
+            if (migration != null) {
+                log.debug("Migration file '{}' has been imported before.", migrationFile.name());
+                return true;
+            }
+        }
+
         // Handle different types of JSON file
         return switch (migrationFile.type()) {
             case "data", "patch" -> {
@@ -163,8 +176,13 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
                     migration.setPath(jsonFile);
                     migration.setType(migrationFile.type());
                     migration.setDepends(migrationFile.depends());
-                    this.save(migration);
-                    yield true;
+
+                    // Save the migration record to the database
+                    boolean saved = this.save(migration);
+                    if (saved) yield true;
+                    else {
+                        throw new RuntimeException("Failed to save migration record to database.");
+                    }
                 } else {
                     yield false;
                 }
@@ -179,6 +197,8 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     /**
      * Handle JSON with type 'data' or 'patch'; It will throw an exception if failed
      *
+     * @param migrationFile migration file
+     * @param filePath      JSON file path
      * @return true if successfully handle all operations, false if the format invalid
      */
     private boolean handleJSON(MigrationFile migrationFile, String filePath) {
@@ -198,7 +218,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
 
         // Apply operations in payload
         for (MigrationOperation operation : migrationFile.payload().operations()) {
-            // Check if operation is valid
+            // Check if the operation is valid
             if (operation.table() == null || operation.table().isBlank()) {
                 log.error("Invalid operation: 'table' is missing. file={}", filePath);
                 return false;
@@ -223,6 +243,9 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
 
     /**
      * Handle insert operation; It will throw an exception if failed
+     *
+     * @param table table name
+     * @param data  insert data
      */
     private void handleInsert(String table, List<Map<String, Object>> data) {
         ServiceResponse<?> res = switch (table) {

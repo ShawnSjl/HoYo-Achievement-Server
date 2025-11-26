@@ -23,28 +23,44 @@ public class SrUserRecordServiceImpl extends ServiceImpl<SrUserRecordMapper, SrU
 
     /**
      * Get all SR achievements with empty records
+     *
+     * @return List of SR achievements with empty records
      */
     public ServiceResponse<List<SrAchievementRecordDto>> getAllAchievementsEmptyRecord() {
         List<SrAchievementRecordDto> list = this.baseMapper.selectAllAchievementsWithEmptyRecord();
+        if (list == null || list.isEmpty()) {
+            return ServiceResponse.error("No SR achievements with empty records found.");
+        }
         log.debug("Get all SR achievements with empty records.");
         return ServiceResponse.success("Get all SR achievements with empty records successfully.", list);
     }
 
     /**
      * Get all SR achievements records by account uuid
+     *
+     * @param uuid Account uuid
+     * @return List of SR achievements records
      */
     public ServiceResponse<List<SrAchievementRecordDto>> getAllAchievementsRecordByUUID(String uuid) {
         List<SrAchievementRecordDto> list = this.baseMapper.selectAllAchievementsRecordByUUID(uuid);
+        if (list == null || list.isEmpty()) {
+            return ServiceResponse.error("No SR achievements records found.");
+        }
         log.debug("Get all SR achievements records by uuid: {}", uuid);
         return ServiceResponse.success("Get all SR achievements records by uuid successfully.", list);
     }
 
     /**
      * Update SR achievement record by achievement id and account uuid
+     *
+     * @param uuid           Account uuid
+     * @param achievementId  SR achievement id
+     * @param completeStatus Complete status
+     * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<Boolean> updateRecordById(String uuid, Integer achievementId, Integer completeStatus) {
-        // Check if account exists
+        // Check if the account exists
         if (!accountService.getAccountByUuid(uuid).success()) {
             log.error("Account uuid doesn't exist: {}", uuid);
             throw new IllegalArgumentException("Account uuid doesn't exist.");
@@ -75,7 +91,11 @@ public class SrUserRecordServiceImpl extends ServiceImpl<SrUserRecordMapper, SrU
     }
 
     /**
-     * Update SR achievement record by achievement id and account uuid; if record doesn't exist, insert a new one
+     * Update SR achievement record by achievement id and account uuid; if the record doesn't exist, insert a new one
+     *
+     * @param uuid           Account uuid
+     * @param achievementId  SR achievement id
+     * @param completeStatus Complete status
      */
     private void updateRecord(String uuid, Integer achievementId, Integer completeStatus) {
         SrUserRecord record = this.lambdaQuery()

@@ -173,8 +173,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // Check if the user exists
         ServiceResponse<User> response = getUserById(id);
         if (!response.success()) {
-            log.error("Target user {} doesn't exist.", id);
-            throw new IllegalArgumentException("Target user doesn't exist.");
+            log.error("Target user {} doesn't exist, update status failed.", id);
+            throw new IllegalArgumentException("Target user doesn't exist, update status failed.");
         }
 
         // Check if the user is admin
@@ -209,8 +209,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // Check if the user exists
         ServiceResponse<User> response = getUserById(id);
         if (!response.success()) {
-            log.error("Target user {} doesn't exist.", id);
-            throw new IllegalArgumentException("Target user doesn't exist.");
+            log.error("Target user {} doesn't exist, update role failed.", id);
+            throw new IllegalArgumentException("Target user doesn't exist, update role failed.");
         }
 
         // Update user role

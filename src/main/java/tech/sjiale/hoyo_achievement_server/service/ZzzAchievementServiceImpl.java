@@ -18,6 +18,9 @@ public class ZzzAchievementServiceImpl extends ServiceImpl<ZzzAchievementMapper,
 
     /**
      * Get ZZZ achievement by id
+     *
+     * @param achievementId achievement id
+     * @return ServiceResponse with BasicAchievementDto
      */
     public ServiceResponse<BasicAchievementDto> getAchievementById(Integer achievementId) {
         // Get achievement by id
@@ -33,6 +36,9 @@ public class ZzzAchievementServiceImpl extends ServiceImpl<ZzzAchievementMapper,
 
     /**
      * Insert ZZZ achievements; should only be called by migration service
+     *
+     * @param achievementMapList List of achievement data
+     * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<?> insertAchievements(List<Map<String, Object>> achievementMapList) {

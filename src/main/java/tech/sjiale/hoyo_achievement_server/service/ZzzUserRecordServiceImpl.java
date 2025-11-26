@@ -23,6 +23,8 @@ public class ZzzUserRecordServiceImpl extends ServiceImpl<ZzzUserRecordMapper, Z
 
     /**
      * Get all ZZZ achievements with empty records
+     *
+     * @return List of ZZZ achievements with empty records
      */
     public ServiceResponse<List<ZzzAchievementRecordDto>> getAllAchievementsEmptyRecord() {
         List<ZzzAchievementRecordDto> list = this.baseMapper.selectAllAchievementsWithEmptyRecord();
@@ -32,6 +34,9 @@ public class ZzzUserRecordServiceImpl extends ServiceImpl<ZzzUserRecordMapper, Z
 
     /**
      * Get all ZZZ achievements records by account uuid
+     *
+     * @param uuid Account uuid
+     * @return List of ZZZ achievements records
      */
     public ServiceResponse<List<ZzzAchievementRecordDto>> getAllAchievementsRecordByUUID(String uuid) {
         List<ZzzAchievementRecordDto> list = this.baseMapper.selectAllAchievementsRecordByUUID(uuid);
@@ -41,10 +46,15 @@ public class ZzzUserRecordServiceImpl extends ServiceImpl<ZzzUserRecordMapper, Z
 
     /**
      * Update ZZZ achievement record by achievement id and account uuid
+     *
+     * @param uuid           Account uuid
+     * @param achievementId  ZZZ achievement id
+     * @param completeStatus Complete status
+     * @return ServiceResponse
      */
     @Transactional
     public ServiceResponse<Boolean> updateRecordById(String uuid, Integer achievementId, Integer completeStatus) {
-        // Check if account exists
+        // Check if an account exists
         if (!accountService.getAccountByUuid(uuid).success()) {
             log.error("Account uuid doesn't exist: {}", uuid);
             throw new IllegalArgumentException("Account uuid doesn't exist.");
@@ -75,7 +85,11 @@ public class ZzzUserRecordServiceImpl extends ServiceImpl<ZzzUserRecordMapper, Z
     }
 
     /**
-     * Update ZZZ achievement record by achievement id and account uuid; if record doesn't exist, insert a new one
+     * Update ZZZ achievement record by achievement id and account uuid; if the record doesn't exist, insert a new one
+     *
+     * @param uuid           Account uuid
+     * @param achievementId  ZZZ achievement id
+     * @param completeStatus Complete status
      */
     private void updateRecord(String uuid, Integer achievementId, Integer completeStatus) {
         ZzzUserRecord record = this.lambdaQuery()
