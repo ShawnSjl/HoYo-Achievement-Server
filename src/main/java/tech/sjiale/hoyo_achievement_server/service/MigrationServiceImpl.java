@@ -44,7 +44,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
      * @param path path; could be a directory or a file
      * @return ServiceResponse
      */
-    public ServiceResponse<?> importNewData(String path) {
+    public ServiceResponse<List<String>> importNewData(String path) {
         Path p = Paths.get(path);
         if (Files.isDirectory(p)) {
             log.debug("Start to get new data in directory: {}", path);
@@ -58,9 +58,20 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
 
             // handle JSON files
             List<String> successFiles = new ArrayList<>();
+            List<String> failedFiles = new ArrayList<>();
             for (String jsonFile : jsonFiles) {
                 if (self.handleJSONFile(jsonFile)) {
                     successFiles.add(jsonFile);
+                } else {
+                    failedFiles.add(jsonFile);
+                }
+            }
+            // Second chance for failed files
+            for (String failedFile : failedFiles) {
+                if (self.handleJSONFile(failedFile)) {
+                    successFiles.add(failedFile);
+                } else {
+                    log.error("Failed to import file twice: {}", failedFile);
                 }
             }
 
@@ -76,8 +87,10 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
             log.debug("Start to get new data in file: {}", path);
 
             if (self.handleJSONFile(path)) {
+                List<String> successFiles = new ArrayList<>();
+                successFiles.add(path);
                 log.debug("Import new data successfully.");
-                return ServiceResponse.success("Import new data successfully.");
+                return ServiceResponse.success("Import new data successfully.", successFiles);
             } else {
                 log.warn("Import new data failed.");
                 return ServiceResponse.error("Import new data failed.");
@@ -116,6 +129,8 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
             log.error(e.getMessage(), e);
         }
 
+        // sort the list
+        foundFiles.sort(String::compareTo);
         return foundFiles;
     }
 
