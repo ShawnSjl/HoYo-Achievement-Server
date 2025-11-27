@@ -93,6 +93,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String hashedPassword = passwordEncoder.encode(password);
         user.setPassword(hashedPassword);
 
+        user.setRole(UserRole.USER);
+        user.setStatus(UserStatus.ACTIVE);
+
         // Save the new user
         boolean success = this.save(user);
         if (!success) {
