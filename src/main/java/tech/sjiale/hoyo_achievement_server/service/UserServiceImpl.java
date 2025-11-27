@@ -32,11 +32,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public ServiceResponse<User> getUserById(Long id) {
         User user = getById(id);
         if (user == null) {
-            log.error("User id {} doesn't exist.", id);
-            return ServiceResponse.error("User id doesn't exist.");
+            return ServiceResponse.error("User id doesn't exist: " + id);
         }
-        log.debug("Get user by id {} successfully.", id);
-        return ServiceResponse.success("Get user by id successfully.", user);
+        return ServiceResponse.success("Get user successfully by id: " + id, user);
     }
 
     /**
@@ -48,11 +46,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public ServiceResponse<User> getUserByName(String name) {
         User user = this.lambdaQuery().eq(User::getUsername, name).one();
         if (user == null) {
-            log.error("User name {} doesn't exist.", name);
-            return ServiceResponse.error("User name doesn't exist.");
+            return ServiceResponse.error("User name doesn't exist: " + name);
         }
-        log.debug("Get user by username {} successfully.", name);
-        return ServiceResponse.success("Get user by username successfully.", user);
+        return ServiceResponse.success("Get user by username successfully: " + name, user);
     }
 
     /**
@@ -63,10 +59,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public ServiceResponse<List<User>> getAllUsers() {
         List<User> users = this.list();
         if (users == null || users.isEmpty()) {
-            log.error("No user found.");
+            // There should always be at least one user that is the root user
             return ServiceResponse.error("No user found.");
         }
-        log.debug("Get all users successfully.");
         return ServiceResponse.success("Get all users successfully.", users);
     }
 
@@ -79,11 +74,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Transactional
     public ServiceResponse<?> createUser(String username, String password) {
+        // Reserve the root username
+        if (username.equals("root")) {
+            return ServiceResponse.error("Root username cannot be created.");
+        }
+
         // Check if the username already exists
         ServiceResponse<User> response = getUserByName(username);
         if (response.success()) {
-            log.error("Username already exists: {}", username);
-            throw new IllegalArgumentException("Username already exists.");
+            return ServiceResponse.error("Username already exists: " + username);
         }
 
         // Create a new user
@@ -96,13 +95,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // Save the new user
         boolean success = this.save(user);
-        if (success) {
-            log.debug("Create user {} successfully.", username);
-            return ServiceResponse.success("Create user successfully.", user);
-        } else {
-            log.error("Create user {} failed.", username);
-            throw new RuntimeException("Create user failed.");
+        if (!success) {
+            throw new RuntimeException("Create user failed: " + username);
         }
+        return ServiceResponse.success("Create user successfully: ", username);
     }
 
     /**
@@ -114,11 +110,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Transactional
     public ServiceResponse<?> updateUsername(Long id, String newUsername) {
+        // Reserve the root username
+        if (newUsername.equals("root")) {
+            return ServiceResponse.error("Root username cannot be created.");
+        }
+
         // Check if the username already exists
         ServiceResponse<User> response = getUserByName(newUsername);
         if (response.success()) {
-            log.error("New username already exists: {}", newUsername);
-            throw new IllegalArgumentException("New username already exists.");
+            return ServiceResponse.error("Username already exists: " + newUsername);
         }
 
         // Update username
@@ -126,13 +126,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(User::getId, id)
                 .set(User::getUsername, newUsername)
                 .update();
-        if (updated) {
-            log.debug("Update username {} successfully.", newUsername);
-            return ServiceResponse.success("Update username successfully.");
-        } else {
-            log.error("Update username {} failed.", newUsername);
-            throw new RuntimeException("Update username failed.");
+        if (!updated) {
+            throw new RuntimeException("Update username failed: " + newUsername);
         }
+        return ServiceResponse.success("Update username successfully: ", newUsername);
     }
 
     /**
@@ -152,13 +149,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(User::getId, id)
                 .set(User::getPassword, hashedPassword)
                 .update();
-        if (updated) {
-            log.debug("Update password successfully.");
-            return ServiceResponse.success("Update password successfully.");
-        } else {
-            log.error("Update password failed.");
-            throw new RuntimeException("Update password failed.");
+        if (!updated) {
+            throw new RuntimeException("Update password failed: " + id);
         }
+        return ServiceResponse.success("Update password successfully: " + id);
     }
 
     /**
@@ -173,14 +167,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // Check if the user exists
         ServiceResponse<User> response = getUserById(id);
         if (!response.success()) {
-            log.error("Target user {} doesn't exist, update status failed.", id);
-            throw new IllegalArgumentException("Target user doesn't exist, update status failed.");
+            return ServiceResponse.error("Target user doesn't exist, update status failed: " + id);
         }
 
         // Check if the user is admin or root
         if (response.data().getRole() == UserRole.ADMIN || response.data().getRole() == UserRole.ROOT) {
-            log.error("Admin or root user cannot be disabled.");
-            throw new IllegalArgumentException("Admin or root user cannot be disabled.");
+            return ServiceResponse.error("Admin and root user cannot be disabled: " + id);
         }
 
         // Update user status
@@ -188,17 +180,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(User::getId, id)
                 .set(User::getStatus, status)
                 .update();
-        if (updated) {
-            log.debug("Update user status successfully.");
-            return ServiceResponse.success("Update user status successfully.");
-        } else {
-            log.error("Update user status failed.");
-            throw new RuntimeException("Update user status failed.");
+        if (!updated) {
+            throw new RuntimeException("Update user status failed: " + id);
         }
+        return ServiceResponse.success("Update user status successfully: " + id);
     }
 
     /**
-     * Update user role; should only be called by admin or root
+     * Update user role;
+     * Should only be called by admin or root;
+     * Root cannot be assigned to another role or changed to another role;
+     * Admin user should not exceed 5.
      *
      * @param id   user id
      * @param role new role
@@ -208,15 +200,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public ServiceResponse<?> updateUserRole(Long id, UserRole role) {
         // Cannot set to root
         if (role == UserRole.ROOT) {
-            log.error("Root cannot be assigned to user.");
-            throw new IllegalArgumentException("Root cannot be assigned to user.");
+            return ServiceResponse.error("Root cannot be assigned to a user.");
         }
 
         // Check if the user exists
         ServiceResponse<User> response = getUserById(id);
         if (!response.success()) {
-            log.error("Target user {} doesn't exist, update role failed.", id);
-            throw new IllegalArgumentException("Target user doesn't exist, update role failed.");
+            return ServiceResponse.error("Target user doesn't exist, update status failed: " + id);
+        }
+
+        // Cannot change the role of a root user
+        if (response.data().getRole() == UserRole.ROOT) {
+            return ServiceResponse.error("Root cannot be changed to another role.");
+        }
+
+        // Check the number of admin users before this transaction
+        Long adminNumber = this.lambdaQuery().eq(User::getStatus, UserRole.ADMIN).count();
+        if (adminNumber >= 5 && role == UserRole.ADMIN) {
+            return ServiceResponse.error("Number of admin user should be at most 5.");
         }
 
         // Update user role
@@ -225,22 +226,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .set(User::getRole, role)
                 .update();
         if (!updated) {
-            log.error("Update user role failed.");
-            throw new RuntimeException("Update user role failed.");
+            throw new RuntimeException("Update user role failed: " + id);
         }
-
-        // Check the number of admin users after this transaction
-        Long adminNumber = this.lambdaQuery().eq(User::getStatus, UserRole.ADMIN).count();
-        if (adminNumber < 1) {
-            log.error("Number of admin user should be at least 1.");
-            throw new IllegalArgumentException("Number of admin user should be at least 1.");
-        } else if (adminNumber > 5) {
-            log.error("Number of admin user should be at most 5.");
-            throw new IllegalArgumentException("Number of admin user should be at most 5.");
-        }
-
-        log.debug("Update user role successfully.");
-        return ServiceResponse.success("Update user role successfully.");
+        return ServiceResponse.success("Update user role successfully: " + id);
     }
 
     /**
@@ -254,14 +242,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // Cannot delete root user
         User user = this.getById(id);
         if (user != null && user.getRole() == UserRole.ROOT) {
-            log.error("Root user cannot be deleted.");
-            throw new IllegalArgumentException("Root user cannot be deleted.");
+            return ServiceResponse.error("Root user cannot be deleted.");
         }
 
         // Delete all accounts associated with the user
         ServiceResponse<List<Account>> response = accountService.getAllAccountsByUserId(id);
         if (!response.success()) {
-            log.debug("No account found for user id: {}.", id);
+            log.error(response.message());
         } else {
             for (Account account : response.data()) {
                 accountService.deleteAccount(account.getAccountUuid());
@@ -271,12 +258,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // Delete user
         boolean removed = this.removeById(id);
         if (removed) {
-            log.debug("Delete user {} successfully.", id);
-            return ServiceResponse.success("Delete user successfully.");
-        } else {
-            log.error("Delete user {} failed.", id);
-            throw new RuntimeException("Delete user failed.");
+            throw new RuntimeException("Delete user failed: " + id);
         }
+        return ServiceResponse.success("Delete user successfully: " + id);
     }
 
     /**
@@ -289,10 +273,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Transactional
     public ServiceResponse<?> createRootUser(String username, String password) {
         // Check if the root already exists
+        Long adminNumber = this.lambdaQuery().eq(User::getStatus, UserRole.ROOT).count();
+        if (adminNumber != 0) {
+            return ServiceResponse.success("Root already exists.");
+        }
+
+        // Check if the username already exists
         ServiceResponse<User> response = getUserByName(username);
         if (response.success()) {
-            log.debug("Root already exists: {}", username);
-            return ServiceResponse.success("Root already exists.");
+            return ServiceResponse.error("Root username already exists: " + username);
         }
 
         // Create a new root user

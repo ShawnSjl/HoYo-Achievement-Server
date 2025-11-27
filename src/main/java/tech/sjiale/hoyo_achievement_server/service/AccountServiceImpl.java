@@ -43,28 +43,25 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         List<Account> accounts = this.lambdaQuery().eq(Account::getUserId, userId).list();
 
         if (accounts == null) {
-            log.error("Get all accounts by user id failed.");
+            return ServiceResponse.error("Get all accounts by user id failed.");
         } else if (accounts.isEmpty()) {
-            log.warn("No account found for user id: {}.", userId);
-            return ServiceResponse.success("No account found.", accounts);
+            return ServiceResponse.success("No account found for user id: " + userId, accounts);
         }
-        log.debug("Get all accounts by user id successfully.");
-        return ServiceResponse.success("Get all accounts by user id successfully.", accounts);
+        return ServiceResponse.success("Get all accounts successfully for user id: " + userId, accounts);
     }
 
     /**
      * Create a new account; should only be called by the user itself
      *
      * @param account Account entity
+     * @return ServiceResponse
      */
     @Transactional
-    public void createAccount(Account account) {
+    public ServiceResponse<?> createAccount(Account account) {
         // Check the uniqueness of uuid
         ServiceResponse<Account> response = getAccountByUuid(account.getAccountUuid());
         if (response.success()) {
-            log.error("Account already exists for uuid: {}.", account.getAccountUuid());
-            // TODO: how to handle this exception? now it expose to the client
-            throw new IllegalArgumentException("Account already exists.");
+            return ServiceResponse.error("Account already exists for uuid: " + account.getAccountUuid());
         }
 
         // Save the new account
@@ -73,6 +70,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
             log.error("Create account failed.");
             throw new RuntimeException("Create account failed.");
         }
+        return ServiceResponse.success("Create account successfully for uuid: " + account.getAccountUuid());
     }
 
     /**
@@ -80,9 +78,10 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
      *
      * @param uuid    account uuid
      * @param newName new account name
+     * @return ServiceResponse
      */
     @Transactional
-    public void updateAccountName(String uuid, String newName) {
+    public ServiceResponse<?> updateAccountName(String uuid, String newName) {
         // Update account name
         boolean updated = this.lambdaUpdate()
                 .eq(Account::getAccountUuid, uuid)
@@ -92,15 +91,17 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
             log.error("Update account name failed.");
             throw new RuntimeException("Update account name failed.");
         }
+        return ServiceResponse.success("Update account name successfully for uuid: " + uuid);
     }
 
     /**
      * Update account in game uid; should only be called by the user itself
      *
      * @param uuid account uuid
+     * @return ServiceResponse
      */
     @Transactional
-    public void updateAccountInGameUid(String uuid, String newInGameUid) {
+    public ServiceResponse<?> updateAccountInGameUid(String uuid, String newInGameUid) {
         // Update account in game uid
         boolean updated = this.lambdaUpdate()
                 .eq(Account::getAccountUuid, uuid)
@@ -110,15 +111,17 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
             log.error("Update account in game uid failed.");
             throw new RuntimeException("Update account in game uid failed.");
         }
+        return ServiceResponse.success("Update account in game uid successfully for uuid: " + uuid);
     }
 
     /**
      * Delete an account by account uuid; should only be called by the user itself
      *
      * @param uuid account uuid
+     * @return ServiceResponse
      */
     @Transactional
-    public void deleteAccount(String uuid) {
+    public ServiceResponse<?> deleteAccount(String uuid) {
         // Delete an account
         boolean removed = this.lambdaUpdate()
                 .eq(Account::getAccountUuid, uuid)
@@ -127,5 +130,6 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
             log.error("Delete account failed.");
             throw new RuntimeException("Delete account failed.");
         }
+        return ServiceResponse.success("Delete account successfully for uuid: " + uuid);
     }
 }

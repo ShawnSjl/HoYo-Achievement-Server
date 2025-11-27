@@ -30,11 +30,11 @@ public class ServerInfoController {
     public SaResult allServerInfo() {
         ServiceResponse<List<ServerInfo>> response = serverInfoService.getAllServerInfo();
         if (response.success()) {
-            log.info("Get all server info successfully.");
-            return SaResult.ok().setData(response.data());
+            log.info(response.message());
+            return SaResult.ok("获取全部服务器信息成功").setData(response.data());
         } else {
-            log.error("Get all server info failed: {}", response.message());
-            return SaResult.error(response.message()).setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            log.error(response.message());
+            return SaResult.error("获取全部服务器信息失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
     }
 
@@ -47,11 +47,11 @@ public class ServerInfoController {
     public SaResult latestServerInfo() {
         ServiceResponse<ServerInfo> response = serverInfoService.getLatestServerInfo();
         if (response.success()) {
-            log.info("Get latest server info successfully.");
-            return SaResult.ok().setData(response.data());
+            log.info(response.message());
+            return SaResult.ok("获取最新服务器信息成功").setData(response.data());
         } else {
-            log.error("Get latest server info failed: {}", response.message());
-            return SaResult.error(response.message()).setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            log.error(response.message());
+            return SaResult.error("获取最新服务器信息失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
     }
 }

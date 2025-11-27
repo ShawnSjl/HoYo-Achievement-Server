@@ -13,6 +13,8 @@ import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.dto.account_request.AccountDeleteRequest;
 import tech.sjiale.hoyo_achievement_server.entity.Account;
 import tech.sjiale.hoyo_achievement_server.service.AccountService;
+import tech.sjiale.hoyo_achievement_server.util.ParameterChecker;
+import tech.sjiale.hoyo_achievement_server.util.AuthUtil;
 
 import java.util.List;
 import java.util.Objects;
@@ -35,7 +37,7 @@ public class AccountController {
     @GetMapping("/get-by-user-id")
     public SaResult getAccountByUserId() {
         // Check if the user is login
-        if (isNotLogin()) {
+        if (AuthUtil.isNotLogin()) {
             return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
@@ -45,11 +47,11 @@ public class AccountController {
         // Get all accounts by user id
         ServiceResponse<List<Account>> response = accountService.getAllAccountsByUserId(userId);
         if (!response.success()) {
-            log.error("Get all accounts by user id failed: {}", response.message());
-            return SaResult.error(response.message()).setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            log.error(response.message());
+            return SaResult.error("获取用户账号失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
-        log.info("Get all accounts by user id {} successfully.", userId);
-        return SaResult.ok().setData(response.data());
+        log.info(response.message());
+        return SaResult.ok("获取当前用户账号成功").setData(response.data());
     }
 
     /**
@@ -63,7 +65,7 @@ public class AccountController {
     @PutMapping("/create")
     public SaResult createAccount(@RequestBody Account account) {
         // Check if the user is login
-        if (isNotLogin()) {
+        if (AuthUtil.isNotLogin()) {
             return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
@@ -74,15 +76,19 @@ public class AccountController {
         if (!Objects.equals(account.getUserId(), userId)) {
             log.error("Account user id {} doesn't match request user id {}.", account.getUserId(), userId);
             return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
-        } else if (isAccountUuidInvalid(account.getAccountUuid())
-                || isAccountNameInvalid(account.getAccountName())
-                || isAccountInGameUidInvalid(account.getAccountInGameUid())) {
+        } else if (ParameterChecker.isAccountUuidInvalid(account.getAccountUuid())
+                || ParameterChecker.isAccountNameInvalid(account.getAccountName())
+                || ParameterChecker.isAccountInGameUidInvalid(account.getAccountInGameUid())) {
             return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
         }
 
         // Create that account
-        accountService.createAccount(account);
-        log.info("Create account {} successfully.", account.getAccountUuid());
+        ServiceResponse<?> response = accountService.createAccount(account);
+        if (!response.success()) {
+            log.error(response.message());
+            return SaResult.error("创建用户失败").setCode(HttpStatus.BAD_REQUEST.value());
+        }
+        log.info(response.message());
         return SaResult.ok("创建用户成功");
     }
 
@@ -97,13 +103,13 @@ public class AccountController {
     @PutMapping("/update-name")
     public SaResult updateAccountName(@RequestBody AccountUpdateNameRequest req) {
         // Validate input
-        if (isAccountUuidInvalid(req.getAccountUuid())
-                || isAccountNameInvalid(req.getAccountName())) {
+        if (ParameterChecker.isAccountUuidInvalid(req.getAccountUuid())
+                || ParameterChecker.isAccountNameInvalid(req.getAccountName())) {
             return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
         }
 
         // Check if the user is login
-        if (isNotLogin()) {
+        if (AuthUtil.isNotLogin()) {
             return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
@@ -112,12 +118,12 @@ public class AccountController {
 
         // Check if the account uuid belongs to the user
         if (isUserNotOwnAccount(userId, req.getAccountUuid())) {
-            return SaResult.error("非对应用户请求").setCode(HttpStatus.UNAUTHORIZED.value());
+            return SaResult.error("非对应用户请求").setCode(HttpStatus.FORBIDDEN.value());
         }
 
         // Update account name
-        accountService.updateAccountName(req.getAccountUuid(), req.getAccountName());
-        log.info("Update account name {} successfully.", req.getAccountUuid());
+        ServiceResponse<?> response = accountService.updateAccountName(req.getAccountUuid(), req.getAccountName());
+        log.info(response.message());
         return SaResult.ok("游戏账户名称更新成功");
     }
 
@@ -132,13 +138,13 @@ public class AccountController {
     @PutMapping("/update-in-game-uid")
     public SaResult updateAccountInGameUid(@RequestBody AccountUpdateUidRequest req) {
         // Validate input
-        if (isAccountUuidInvalid(req.getAccountUuid())
-                || isAccountInGameUidInvalid(req.getAccountInGameUid())) {
+        if (ParameterChecker.isAccountUuidInvalid(req.getAccountUuid())
+                || ParameterChecker.isAccountInGameUidInvalid(req.getAccountInGameUid())) {
             return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
         }
 
         // Check if the user is login
-        if (isNotLogin()) {
+        if (AuthUtil.isNotLogin()) {
             return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
@@ -147,12 +153,12 @@ public class AccountController {
 
         // Check if the account uuid belongs to the user
         if (isUserNotOwnAccount(userId, req.getAccountUuid())) {
-            return SaResult.error("非对应用户请求").setCode(HttpStatus.UNAUTHORIZED.value());
+            return SaResult.error("非对应用户请求").setCode(HttpStatus.FORBIDDEN.value());
         }
 
         // Update account in game uid
-        accountService.updateAccountInGameUid(req.getAccountUuid(), req.getAccountInGameUid());
-        log.info("Update account in game uid {} successfully.", req.getAccountUuid());
+        ServiceResponse<?> response = accountService.updateAccountInGameUid(req.getAccountUuid(), req.getAccountInGameUid());
+        log.info(response.message());
         return SaResult.ok("游戏账户uid更新成功");
     }
 
@@ -167,12 +173,12 @@ public class AccountController {
     @DeleteMapping("/delete")
     public SaResult deleteAccount(@RequestBody AccountDeleteRequest req) {
         // Validate input
-        if (isAccountUuidInvalid(req.getAccountUuid())) {
+        if (ParameterChecker.isAccountUuidInvalid(req.getAccountUuid())) {
             return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
         }
 
         // Check if the user is login
-        if (isNotLogin()) {
+        if (AuthUtil.isNotLogin()) {
             return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
@@ -181,74 +187,13 @@ public class AccountController {
 
         // Check if the account uuid belongs to the user
         if (isUserNotOwnAccount(userId, req.getAccountUuid())) {
-            return SaResult.error("非对应用户请求").setCode(HttpStatus.UNAUTHORIZED.value());
+            return SaResult.error("非对应用户请求").setCode(HttpStatus.FORBIDDEN.value());
         }
 
         // Delete that account
-        accountService.deleteAccount(req.getAccountUuid());
-        log.info("Delete account successfully.");
+        ServiceResponse<?> response = accountService.deleteAccount(req.getAccountUuid());
+        log.info(response.message());
         return SaResult.ok("删除账户成功");
-    }
-
-    /**
-     * Helper method to check if the user is login
-     *
-     * @return true if not login, false otherwise
-     */
-    private boolean isNotLogin() {
-        boolean login = StpUtil.isLogin();
-        if (!login) {
-            log.error("User is not login.");
-        }
-        return !login;
-    }
-
-    /**
-     * Helper method to check if the account uuid is invalid
-     *
-     * @param accountUuid account uuid
-     * @return true if invalid, false otherwise
-     */
-    private boolean isAccountUuidInvalid(String accountUuid) {
-        boolean invalid = accountUuid == null
-                || accountUuid.isBlank()
-                || accountUuid.length() > 512;
-        if (invalid) {
-            log.error("Account uuid is invalid: {}.", accountUuid);
-        }
-        return invalid;
-    }
-
-    /**
-     * Helper method to check if the account name is invalid
-     *
-     * @param accountName account name
-     * @return true if invalid, false otherwise
-     */
-    private boolean isAccountNameInvalid(String accountName) {
-        boolean invalid = accountName == null
-                || accountName.isBlank()
-                || accountName.length() > 24;
-        if (invalid) {
-            log.error("Account name is invalid: {}.", accountName);
-        }
-        return invalid;
-    }
-
-    /**
-     * Helper method to check if the account in game uid is invalid
-     *
-     * @param accountInGameUid account in game uid
-     * @return true if invalid, false otherwise
-     */
-    private boolean isAccountInGameUidInvalid(String accountInGameUid) {
-        if (accountInGameUid == null) return true;
-
-        boolean invalid = accountInGameUid.length() > 128;
-        if (invalid) {
-            log.error("Account in game uid is too long.");
-        }
-        return invalid;
     }
 
     /**
@@ -262,7 +207,7 @@ public class AccountController {
         // Get all accounts by user id
         ServiceResponse<List<Account>> response = accountService.getAllAccountsByUserId(userId);
         if (!response.success()) {
-            log.error("Get all accounts by user id failed: {}", response.message());
+            log.error(response.message());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, response.message());
         }
 

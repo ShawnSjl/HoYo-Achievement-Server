@@ -12,11 +12,11 @@ public interface AccountService extends IService<Account> {
 
     ServiceResponse<List<Account>> getAllAccountsByUserId(Long userId);
 
-    void createAccount(Account account);
+    ServiceResponse<?> createAccount(Account account);
 
-    void updateAccountName(String uuid, String newName);
+    ServiceResponse<?> updateAccountName(String uuid, String newName);
 
-    void updateAccountInGameUid(String uuid, String newInGameUid);
+    ServiceResponse<?> updateAccountInGameUid(String uuid, String newInGameUid);
 
-    void deleteAccount(String uuid);
+    ServiceResponse<?> deleteAccount(String uuid);
 }

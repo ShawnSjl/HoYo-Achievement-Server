@@ -37,7 +37,7 @@ public class StartupRunner implements ApplicationRunner {
 
         log.info("Check root user status");
         try {
-            ServiceResponse<?> rootStatus = userService.createRootUser("admin", "Admin@123");
+            ServiceResponse<?> rootStatus = userService.createRootUser("root", "Root@123");
             log.info("Root user status: {}", rootStatus.message());
         } catch (Exception e) {
             log.warn("Create root user failed.", e);
