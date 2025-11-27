@@ -26,7 +26,7 @@ public class UserController {
      * Login
      *
      * @param request login request with username and password
-     * @return SaResult
+     * @return SaResult with token
      */
     @PostMapping("login")
     public SaResult doLogin(@RequestBody LoginRequest request) {
@@ -59,18 +59,22 @@ public class UserController {
         return SaResult.ok("登陆成功").setData(StpUtil.getTokenInfo());
     }
 
-    // 查询登录状态，浏览器访问： http://localhost:8081/user/isLogin
-    @RequestMapping("isLogin")
+    /**
+     * Is user login; it will check token in header
+     *
+     * @return SaResult
+     */
+    @GetMapping("isLogin")
     public SaResult isLogin() {
-        return SaResult.ok("是否登录：" + StpUtil.isLogin());
+        return SaResult.ok("是否登录：" + StpUtil.isLogin()).setData(StpUtil.isLogin());
     }
 
-    @RequestMapping("tokenInfo")
-    public SaResult tokenInfo() {
-        return SaResult.data(StpUtil.getTokenInfo());
-    }
-
-    @RequestMapping("logout")
+    /**
+     * User logout
+     *
+     * @return SaResult
+     */
+    @PostMapping("logout")
     public SaResult logout() {
         StpUtil.logout();
         return SaResult.ok();
