@@ -42,9 +42,9 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
     public ServiceResponse<List<Integer>> getAchievementInSameBranch(Integer achievementId) {
         // Get SR branche id by achievement id, return an empty list if the achievement is not in a branch
         Integer branchId = this.lambdaQuery()
-                .eq(SrBranch::getAchievement_id, achievementId)
+                .eq(SrBranch::getAchievementId, achievementId)
                 .oneOpt()
-                .map(SrBranch::getBranch_id)
+                .map(SrBranch::getBranchId)
                 .orElse(null);
         if (branchId == null) {
             log.debug("No SR branch found for achievement id: {}", achievementId);
@@ -53,12 +53,12 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
 
         // Get other achievement ids in the same branch
         List<Integer> achievementIds = this.lambdaQuery()
-                .select(SrBranch::getAchievement_id)
-                .eq(SrBranch::getBranch_id, branchId)
-                .ne(SrBranch::getAchievement_id, achievementId)
+                .select(SrBranch::getAchievementId)
+                .eq(SrBranch::getBranchId, branchId)
+                .ne(SrBranch::getAchievementId, achievementId)
                 .list()
                 .stream()
-                .map(SrBranch::getAchievement_id)
+                .map(SrBranch::getAchievementId)
                 .toList();
         log.debug("Get SR achievement ids in the same branch successfully.");
         return ServiceResponse.success("Get SR achievement ids in the same branch successfully.", achievementIds);
@@ -82,8 +82,8 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
             }
 
             SrBranch branch = new SrBranch();
-            branch.setAchievement_id(achievementId);
-            branch.setBranch_id(branchId);
+            branch.setAchievementId(achievementId);
+            branch.setBranchId(branchId);
             this.save(branch);
         }
         log.debug("Insert SR branches successfully.");

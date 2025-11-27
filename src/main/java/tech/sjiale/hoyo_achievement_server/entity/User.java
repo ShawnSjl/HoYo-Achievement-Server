@@ -10,17 +10,24 @@ import java.time.LocalDateTime;
 @Data
 @TableName("users")
 public class User {
-    @TableId(type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
+    @TableField(value = "username")
     private String username;
+
+    @TableField(value = "password")
     private String password;
+
+    @TableField(value = "role")
     private UserRole role;
+
+    @TableField(value = "status")
     private UserStatus status;
 
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime created_at = LocalDateTime.now();
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    @TableField(fill = FieldFill.INSERT_UPDATE)
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updated_at = LocalDateTime.now();
 }

@@ -13,13 +13,18 @@ public class DataMigration {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    @TableField(value = "name")
     private String name;
+
+    @TableField(value = "path")
     private String path;
+
+    @TableField(value = "type")
     private String type;
 
     @TableField(value = "depends", typeHandler = JacksonTypeHandler.class)
     private List<String> depends;
 
-    @TableField(insertStrategy = FieldStrategy.NEVER)
-    private LocalDateTime migration_time;
+    @TableField(value = "migration_time", insertStrategy = FieldStrategy.NEVER)
+    private LocalDateTime migrationTime;
 }

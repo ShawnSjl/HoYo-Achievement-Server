@@ -264,7 +264,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             log.debug("No account found for user id: {}.", id);
         } else {
             for (Account account : response.data()) {
-                accountService.deleteAccount(account.getAccount_uuid());
+                accountService.deleteAccount(account.getAccountUuid());
             }
         }
 

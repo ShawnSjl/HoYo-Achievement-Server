@@ -57,13 +57,13 @@ public class SrAchievementServiceImpl extends ServiceImpl<SrAchievementMapper, S
             }
 
             SrAchievement achievement = new SrAchievement();
-            achievement.setAchievement_id(achievementId);
+            achievement.setAchievementId(achievementId);
             achievement.setClassName(className);
             achievement.setName(name);
             achievement.setDescription(description);
-            achievement.setReward_level(rewardLevel);
+            achievement.setRewardLevel(rewardLevel);
             achievement.setHidden(hidden);
-            achievement.setGame_version(gameVersion);
+            achievement.setGameVersion(gameVersion);
             this.save(achievement);
         }
         log.debug("Insert SR achievements successfully.");

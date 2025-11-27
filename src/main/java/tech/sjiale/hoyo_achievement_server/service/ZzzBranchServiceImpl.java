@@ -42,9 +42,9 @@ public class ZzzBranchServiceImpl extends ServiceImpl<ZzzBranchMapper, ZzzBranch
     public ServiceResponse<List<Integer>> getAchievementInSameBranch(Integer achievementId) {
         // Get ZZZ branches by achievement id, return an empty list if the achievement is not in a branch
         Integer branchId = this.lambdaQuery()
-                .eq(ZzzBranch::getAchievement_id, achievementId)
+                .eq(ZzzBranch::getAchievementId, achievementId)
                 .oneOpt()
-                .map(ZzzBranch::getBranch_id)
+                .map(ZzzBranch::getBranchId)
                 .orElse(null);
         if (branchId == null) {
             log.debug("No ZZZ branch found for achievement id: {}", achievementId);
@@ -53,12 +53,12 @@ public class ZzzBranchServiceImpl extends ServiceImpl<ZzzBranchMapper, ZzzBranch
 
         // Get other achievement ids in the same branch
         List<Integer> achievementIds = this.lambdaQuery()
-                .select(ZzzBranch::getAchievement_id)
-                .eq(ZzzBranch::getBranch_id, branchId)
-                .ne(ZzzBranch::getAchievement_id, achievementId)
+                .select(ZzzBranch::getAchievementId)
+                .eq(ZzzBranch::getBranchId, branchId)
+                .ne(ZzzBranch::getAchievementId, achievementId)
                 .list()
                 .stream()
-                .map(ZzzBranch::getAchievement_id)
+                .map(ZzzBranch::getAchievementId)
                 .toList();
         log.debug("Get ZZZ achievement ids in the same branch successfully.");
         return ServiceResponse.success("Get ZZZ achievement ids in the same branch successfully.", achievementIds);
@@ -82,8 +82,8 @@ public class ZzzBranchServiceImpl extends ServiceImpl<ZzzBranchMapper, ZzzBranch
             }
 
             ZzzBranch branch = new ZzzBranch();
-            branch.setAchievement_id(achievementId);
-            branch.setBranch_id(branchId);
+            branch.setAchievementId(achievementId);
+            branch.setBranchId(branchId);
             this.save(branch);
         }
         log.debug("Insert ZZZ branches successfully.");

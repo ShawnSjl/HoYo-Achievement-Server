@@ -58,13 +58,13 @@ public class ZzzAchievementServiceImpl extends ServiceImpl<ZzzAchievementMapper,
             }
 
             ZzzAchievement achievement = new ZzzAchievement();
-            achievement.setAchievement_id(achievementId);
-            achievement.setClass_id(classId);
+            achievement.setAchievementId(achievementId);
+            achievement.setClassId(classId);
             achievement.setName(name);
             achievement.setDescription(description);
-            achievement.setReward_level(rewardLevel);
+            achievement.setRewardLevel(rewardLevel);
             achievement.setHidden(hidden);
-            achievement.setGame_version(gameVersion);
+            achievement.setGameVersion(gameVersion);
             this.save(achievement);
         }
         log.debug("Insert ZZZ achievements successfully.");

@@ -99,19 +99,19 @@ public class SrUserRecordServiceImpl extends ServiceImpl<SrUserRecordMapper, SrU
      */
     private void updateRecord(String uuid, Integer achievementId, Integer completeStatus) {
         SrUserRecord record = this.lambdaQuery()
-                .eq(SrUserRecord::getAccount_uuid, uuid)
-                .eq(SrUserRecord::getAchievement_id, achievementId)
+                .eq(SrUserRecord::getAccountUuid, uuid)
+                .eq(SrUserRecord::getAchievementId, achievementId)
                 .one();
         if (record != null) {
             this.lambdaUpdate()
-                    .eq(SrUserRecord::getAccount_uuid, uuid)
-                    .eq(SrUserRecord::getAchievement_id, achievementId)
+                    .eq(SrUserRecord::getAccountUuid, uuid)
+                    .eq(SrUserRecord::getAchievementId, achievementId)
                     .set(SrUserRecord::getComplete, completeStatus)
                     .update();
         } else {
             SrUserRecord newRecord = new SrUserRecord();
-            newRecord.setAccount_uuid(uuid);
-            newRecord.setAchievement_id(achievementId);
+            newRecord.setAccountUuid(uuid);
+            newRecord.setAchievementId(achievementId);
             newRecord.setComplete(completeStatus);
             this.save(newRecord);
         }

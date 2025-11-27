@@ -93,19 +93,19 @@ public class ZzzUserRecordServiceImpl extends ServiceImpl<ZzzUserRecordMapper, Z
      */
     private void updateRecord(String uuid, Integer achievementId, Integer completeStatus) {
         ZzzUserRecord record = this.lambdaQuery()
-                .eq(ZzzUserRecord::getAccount_uuid, uuid)
-                .eq(ZzzUserRecord::getAchievement_id, achievementId)
+                .eq(ZzzUserRecord::getAccountUuid, uuid)
+                .eq(ZzzUserRecord::getAchievementId, achievementId)
                 .one();
         if (record != null) {
             this.lambdaUpdate()
-                    .eq(ZzzUserRecord::getAccount_uuid, uuid)
-                    .eq(ZzzUserRecord::getAchievement_id, achievementId)
+                    .eq(ZzzUserRecord::getAccountUuid, uuid)
+                    .eq(ZzzUserRecord::getAchievementId, achievementId)
                     .set(ZzzUserRecord::getComplete, completeStatus)
                     .update();
         } else {
             ZzzUserRecord newRecord = new ZzzUserRecord();
-            newRecord.setAccount_uuid(uuid);
-            newRecord.setAchievement_id(achievementId);
+            newRecord.setAccountUuid(uuid);
+            newRecord.setAchievementId(achievementId);
             newRecord.setComplete(completeStatus);
             this.save(newRecord);
         }

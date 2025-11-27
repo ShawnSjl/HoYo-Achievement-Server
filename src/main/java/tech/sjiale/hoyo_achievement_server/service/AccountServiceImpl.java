@@ -23,7 +23,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
      */
     public ServiceResponse<Account> getAccountByUuid(String uuid) {
         Account account = this.lambdaQuery()
-                .eq(Account::getAccount_uuid, uuid)
+                .eq(Account::getAccountUuid, uuid)
                 .one();
 
         if (account == null) {
@@ -41,7 +41,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
      * @return ServiceResponse with a list of Account objects
      */
     public ServiceResponse<List<Account>> getAllAccountsByUserId(Long userId) {
-        List<Account> accounts = this.lambdaQuery().eq(Account::getUser_id, userId).list();
+        List<Account> accounts = this.lambdaQuery().eq(Account::getUserId, userId).list();
 
         if (accounts == null || accounts.isEmpty()) {
             log.error("No account found for user id: {}.", userId);
@@ -73,12 +73,12 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
 
         // Create a new account
         Account account = new Account();
-        account.setAccount_uuid(uuid);
-        account.setUser_id(userId);
-        account.setGame_type(gameType);
-        account.setAccount_name(accountName);
+        account.setAccountUuid(uuid);
+        account.setUserId(userId);
+        account.setGameType(gameType);
+        account.setAccountName(accountName);
         if (accountInGameUid != null) {
-            account.setAccount_in_game_uid(accountInGameUid);
+            account.setAccountInGameUid(accountInGameUid);
         }
 
         // Save the new account
@@ -103,8 +103,8 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     public ServiceResponse<?> updateAccountName(String uuid, String newName) {
         // Update account name
         boolean updated = this.lambdaUpdate()
-                .eq(Account::getAccount_uuid, uuid)
-                .set(Account::getAccount_name, newName)
+                .eq(Account::getAccountUuid, uuid)
+                .set(Account::getAccountName, newName)
                 .update();
         if (updated) {
             log.debug("Update account name successfully.");
@@ -125,8 +125,8 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     public ServiceResponse<?> updateAccountInGameUid(String uuid, String newInGameUid) {
         // Update account in game uid
         boolean updated = this.lambdaUpdate()
-                .eq(Account::getAccount_uuid, uuid)
-                .set(Account::getAccount_in_game_uid, newInGameUid)
+                .eq(Account::getAccountUuid, uuid)
+                .set(Account::getAccountInGameUid, newInGameUid)
                 .update();
         if (updated) {
             log.debug("Update account in game uid successfully.");
@@ -147,7 +147,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     public ServiceResponse<?> deleteAccount(String uuid) {
         // Delete an account
         boolean removed = this.lambdaUpdate()
-                .eq(Account::getAccount_uuid, uuid)
+                .eq(Account::getAccountUuid, uuid)
                 .remove();
         if (removed) {
             log.debug("Delete account successfully.");
