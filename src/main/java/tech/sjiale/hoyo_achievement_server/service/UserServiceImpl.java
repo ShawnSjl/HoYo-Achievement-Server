@@ -273,7 +273,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Transactional
     public ServiceResponse<?> createRootUser(String username, String password) {
         // Check if the root already exists
-        Long adminNumber = this.lambdaQuery().eq(User::getStatus, UserRole.ROOT).count();
+        Long adminNumber = this.lambdaQuery().eq(User::getRole, UserRole.ROOT).count();
         if (adminNumber != 0) {
             return ServiceResponse.success("Root already exists.");
         }
