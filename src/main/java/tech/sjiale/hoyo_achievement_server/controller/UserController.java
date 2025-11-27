@@ -90,6 +90,7 @@ public class UserController {
      */
     @GetMapping("all")
     public SaResult getAllUsers() {
+        // FIXME: do not return hashed password to client
         // Check if the user is login
         if (AuthUtil.isNotLogin()) {
             return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
