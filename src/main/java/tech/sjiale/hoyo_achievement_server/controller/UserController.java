@@ -193,7 +193,7 @@ public class UserController {
     @PutMapping("update-password")
     public SaResult updatePassword(@RequestBody UpdatePasswordRequest request) {
         // Check if the password is valid
-        if (ParameterChecker.isUsernameInvalid(request.getPassword())) {
+        if (ParameterChecker.isPasswordInvalid(request.getPassword())) {
             log.error("Invalid new password: {}", request.getPassword());
             return SaResult.error("新密码格式错误").setCode(HttpStatus.BAD_REQUEST.value());
         }

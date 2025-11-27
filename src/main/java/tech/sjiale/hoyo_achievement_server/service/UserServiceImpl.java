@@ -260,7 +260,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // Delete user
         boolean removed = this.removeById(id);
-        if (removed) {
+        if (!removed) {
             throw new RuntimeException("Delete user failed: " + id);
         }
         return ServiceResponse.success("Delete user successfully: " + id);

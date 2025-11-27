@@ -12,7 +12,10 @@ import tech.sjiale.hoyo_achievement_server.dto.account_request.AccountUpdateUidR
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.dto.account_request.AccountDeleteRequest;
 import tech.sjiale.hoyo_achievement_server.entity.Account;
+import tech.sjiale.hoyo_achievement_server.entity.User;
+import tech.sjiale.hoyo_achievement_server.entity.nume.UserStatus;
 import tech.sjiale.hoyo_achievement_server.service.AccountService;
+import tech.sjiale.hoyo_achievement_server.service.UserService;
 import tech.sjiale.hoyo_achievement_server.util.ParameterChecker;
 import tech.sjiale.hoyo_achievement_server.util.AuthUtil;
 
@@ -26,6 +29,7 @@ import java.util.Objects;
 public class AccountController {
 
     private final AccountService accountService;
+    private final UserService userService;
 
     /**
      * Get all accounts by user id;
@@ -72,6 +76,11 @@ public class AccountController {
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
+        // Check if the user is disabled
+        if (isUserDisabled(userId)) {
+            return SaResult.error("用户已被禁用").setCode(HttpStatus.FORBIDDEN.value());
+        }
+
         // Valid
         if (!Objects.equals(account.getUserId(), userId)) {
             log.error("Account user id {} doesn't match request user id {}.", account.getUserId(), userId);
@@ -116,6 +125,11 @@ public class AccountController {
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
+        // Check if the user is disabled
+        if (isUserDisabled(userId)) {
+            return SaResult.error("用户已被禁用").setCode(HttpStatus.FORBIDDEN.value());
+        }
+
         // Check if the account uuid belongs to the user
         if (isUserNotOwnAccount(userId, req.getAccountUuid())) {
             return SaResult.error("非对应用户请求").setCode(HttpStatus.FORBIDDEN.value());
@@ -151,6 +165,11 @@ public class AccountController {
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
+        // Check if the user is disabled
+        if (isUserDisabled(userId)) {
+            return SaResult.error("用户已被禁用").setCode(HttpStatus.FORBIDDEN.value());
+        }
+
         // Check if the account uuid belongs to the user
         if (isUserNotOwnAccount(userId, req.getAccountUuid())) {
             return SaResult.error("非对应用户请求").setCode(HttpStatus.FORBIDDEN.value());
@@ -184,6 +203,11 @@ public class AccountController {
 
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
+
+        // Check if the user is disabled
+        if (isUserDisabled(userId)) {
+            return SaResult.error("用户已被禁用").setCode(HttpStatus.FORBIDDEN.value());
+        }
 
         // Check if the account uuid belongs to the user
         if (isUserNotOwnAccount(userId, req.getAccountUuid())) {
@@ -223,5 +247,28 @@ public class AccountController {
             log.error("User {} doesn't own account {}.", userId, accountUuid);
         }
         return !ownUuid;
+    }
+
+    /**
+     * Helper method to check if the user is disabled
+     *
+     * @param userId user id
+     * @return true if disabled, false otherwise
+     */
+    private boolean isUserDisabled(Long userId) {
+        // Get user info
+        ServiceResponse<User> userResponse = userService.getUserById(userId);
+        if (!userResponse.success()) {
+            log.error(userResponse.message());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, userResponse.message());
+        }
+
+        // Check if the user is disabled
+        User user = userResponse.data();
+        if (user.getStatus() == UserStatus.DISABLED) {
+            log.error("User {} is disabled.", userId);
+            return true;
+        }
+        return false;
     }
 }
