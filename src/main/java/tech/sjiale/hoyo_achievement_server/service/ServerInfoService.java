@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface ServerInfoService extends IService<ServerInfo> {
-    ServiceResponse<ServerInfo> getServerInfoById(Integer id);
+    ServiceResponse<List<ServerInfo>> getAllServerInfo();
+
     ServiceResponse<ServerInfo> getLatestServerInfo();
 
     // Import use

@@ -16,18 +16,16 @@ import java.util.Map;
 public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerInfo> implements ServerInfoService {
 
     /**
-     * Get the server info by id; if id is invalid, return the latest server info
+     * Get all server info
      *
-     * @param id server info id
-     * @return ServiceResponse with ServerInfo object
+     * @return ServiceResponse with a list of ServerInfo
      */
-    public ServiceResponse<ServerInfo> getServerInfoById(Integer id) {
-        if (id == null || id <= 0) {
-            log.error("id is invalid: {}", id);
-            return this.getLatestServerInfo();
+    public ServiceResponse<List<ServerInfo>> getAllServerInfo() {
+        List<ServerInfo> list = this.list();
+        if (list == null || list.isEmpty()) {
+            return ServiceResponse.error("No server info found.");
         }
-        log.debug("Get server info by ID successfully.");
-        return ServiceResponse.success("Get server info by ID successfully.", this.getById(id));
+        return ServiceResponse.success("Get all server info successfully.", list);
     }
 
     /**
@@ -37,14 +35,12 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
      */
     public ServiceResponse<ServerInfo> getLatestServerInfo() {
         ServerInfo res = this.lambdaQuery()
-                .orderByDesc(ServerInfo::getInfo_id)
+                .orderByDesc(ServerInfo::getInfoId)
                 .last("LIMIT 1")
                 .one();
         if (res == null) {
-            log.error("No server info found.");
             return ServiceResponse.error("No server info found.");
         }
-        log.debug("Get latest server info successfully.");
         return ServiceResponse.success("Get latest server info successfully.", res);
     }
 
@@ -68,10 +64,10 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
             }
 
             ServerInfo serverInfo = new ServerInfo();
-            serverInfo.setServer_version(serverVersion);
-            serverInfo.setZzz_version(zzzVersion);
-            serverInfo.setSr_version(srVersion);
-            serverInfo.setUpdate_description(updateDescription);
+            serverInfo.setServerVersion(serverVersion);
+            serverInfo.setZzzVersion(zzzVersion);
+            serverInfo.setSrVersion(srVersion);
+            serverInfo.setUpdateDescription(updateDescription);
             this.save(serverInfo);
         }
         log.debug("Insert server info batch successfully.");

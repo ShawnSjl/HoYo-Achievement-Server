@@ -30,8 +30,6 @@ public class UserController {
      */
     @PostMapping("login")
     public SaResult doLogin(@RequestBody LoginRequest request) {
-        log.debug("Login request: {}", request);
-
         // Check if the username and password are valid
         if (!ParameterChecker.isValidUsername(request.getUsername()) ||
                 !ParameterChecker.isValidPassword(request.getPassword())) {
@@ -54,7 +52,6 @@ public class UserController {
         }
 
         // Login
-        log.info("User {} login successfully.", request.getUsername());
         StpUtil.login(userResponse.data().getId());
         return SaResult.ok("登陆成功").setData(StpUtil.getTokenInfo());
     }

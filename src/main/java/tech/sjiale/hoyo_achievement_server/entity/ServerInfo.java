@@ -8,14 +8,21 @@ import java.time.LocalDateTime;
 @Data
 @TableName("server_info")
 public class ServerInfo {
-    @TableId(type = IdType.AUTO)
-    private Long info_id;
+    @TableId(value = "info_id", type = IdType.AUTO)
+    private Long infoId;
 
-    private String server_version;
-    private String zzz_version;
-    private String sr_version;
-    private String update_description;
+    @TableField(value = "server_version")
+    private String serverVersion;
 
-    @TableField(insertStrategy = FieldStrategy.NEVER)
-    private LocalDateTime update_at;
+    @TableField(value = "zzz_version")
+    private String zzzVersion;
+
+    @TableField(value = "sr_version")
+    private String srVersion;
+
+    @TableField(value = "update_description")
+    private String updateDescription;
+
+    @TableField(value = "updated_at", insertStrategy = FieldStrategy.NEVER)
+    private LocalDateTime updatedAt;
 }
