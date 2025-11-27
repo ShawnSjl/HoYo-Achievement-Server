@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.Account;
-import tech.sjiale.hoyo_achievement_server.entity.nume.GameType;
 import tech.sjiale.hoyo_achievement_server.mapper.AccountMapper;
 
 import java.util.List;
@@ -43,9 +42,11 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     public ServiceResponse<List<Account>> getAllAccountsByUserId(Long userId) {
         List<Account> accounts = this.lambdaQuery().eq(Account::getUserId, userId).list();
 
-        if (accounts == null || accounts.isEmpty()) {
-            log.error("No account found for user id: {}.", userId);
-            return ServiceResponse.error("No account found.");
+        if (accounts == null) {
+            log.error("Get all accounts by user id failed.");
+        } else if (accounts.isEmpty()) {
+            log.warn("No account found for user id: {}.", userId);
+            return ServiceResponse.success("No account found.", accounts);
         }
         log.debug("Get all accounts by user id successfully.");
         return ServiceResponse.success("Get all accounts by user id successfully.", accounts);
@@ -54,39 +55,21 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     /**
      * Create a new account; should only be called by the user itself
      *
-     * @param userId           user id
-     * @param uuid             account uuid
-     * @param gameType         account game type
-     * @param accountName      account name
-     * @param accountInGameUid account in game uid
-     * @return ServiceResponse
+     * @param account Account entity
      */
     @Transactional
-    public ServiceResponse<?> createAccount(Long userId, String uuid, GameType gameType, String accountName,
-                                            String accountInGameUid) {
+    public void createAccount(Account account) {
         // Check the uniqueness of uuid
-        ServiceResponse<Account> response = getAccountByUuid(uuid);
+        ServiceResponse<Account> response = getAccountByUuid(account.getAccountUuid());
         if (response.success()) {
-            log.error("Account already exists for uuid: {}.", uuid);
+            log.error("Account already exists for uuid: {}.", account.getAccountUuid());
+            // TODO: how to handle this exception? now it expose to the client
             throw new IllegalArgumentException("Account already exists.");
-        }
-
-        // Create a new account
-        Account account = new Account();
-        account.setAccountUuid(uuid);
-        account.setUserId(userId);
-        account.setGameType(gameType);
-        account.setAccountName(accountName);
-        if (accountInGameUid != null) {
-            account.setAccountInGameUid(accountInGameUid);
         }
 
         // Save the new account
         boolean success = this.save(account);
-        if (success) {
-            log.debug("Create account successfully.");
-            return ServiceResponse.success("Create account successfully.");
-        } else {
+        if (!success) {
             log.error("Create account failed.");
             throw new RuntimeException("Create account failed.");
         }
@@ -97,19 +80,15 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
      *
      * @param uuid    account uuid
      * @param newName new account name
-     * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> updateAccountName(String uuid, String newName) {
+    public void updateAccountName(String uuid, String newName) {
         // Update account name
         boolean updated = this.lambdaUpdate()
                 .eq(Account::getAccountUuid, uuid)
                 .set(Account::getAccountName, newName)
                 .update();
-        if (updated) {
-            log.debug("Update account name successfully.");
-            return ServiceResponse.success("Update account name successfully.");
-        } else {
+        if (!updated) {
             log.error("Update account name failed.");
             throw new RuntimeException("Update account name failed.");
         }
@@ -119,19 +98,15 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
      * Update account in game uid; should only be called by the user itself
      *
      * @param uuid account uuid
-     * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> updateAccountInGameUid(String uuid, String newInGameUid) {
+    public void updateAccountInGameUid(String uuid, String newInGameUid) {
         // Update account in game uid
         boolean updated = this.lambdaUpdate()
                 .eq(Account::getAccountUuid, uuid)
                 .set(Account::getAccountInGameUid, newInGameUid)
                 .update();
-        if (updated) {
-            log.debug("Update account in game uid successfully.");
-            return ServiceResponse.success("Update account in game uid successfully.");
-        } else {
+        if (!updated) {
             log.error("Update account in game uid failed.");
             throw new RuntimeException("Update account in game uid failed.");
         }
@@ -141,18 +116,14 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
      * Delete an account by account uuid; should only be called by the user itself
      *
      * @param uuid account uuid
-     * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> deleteAccount(String uuid) {
+    public void deleteAccount(String uuid) {
         // Delete an account
         boolean removed = this.lambdaUpdate()
                 .eq(Account::getAccountUuid, uuid)
                 .remove();
-        if (removed) {
-            log.debug("Delete account successfully.");
-            return ServiceResponse.success("Delete account successfully.");
-        } else {
+        if (!removed) {
             log.error("Delete account failed.");
             throw new RuntimeException("Delete account failed.");
         }

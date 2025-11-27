@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import tech.sjiale.hoyo_achievement_server.dto.LoginRequest;
+import tech.sjiale.hoyo_achievement_server.dto.user_request.LoginRequest;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.User;
 import tech.sjiale.hoyo_achievement_server.service.UserService;
@@ -74,6 +74,6 @@ public class UserController {
     @PostMapping("logout")
     public SaResult logout() {
         StpUtil.logout();
-        return SaResult.ok();
+        return SaResult.ok("用户已登出");
     }
 }
