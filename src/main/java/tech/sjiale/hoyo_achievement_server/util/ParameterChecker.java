@@ -6,17 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ParameterChecker {
 
     /**
-     * Checking user id; user id should be a positive integer
-     *
-     * @param id user id
-     * @return true if invalid, false otherwise
-     */
-    public static boolean isUserIdInvalid(String id) {
-        if (id == null) return true;
-        return !id.matches("^\\d+$");
-    }
-
-    /**
      * Checking username; username should between 3-20 length, it could include English, Chinese, digits and underscore
      *
      * @param username username

@@ -19,7 +19,6 @@ public class ZzzUserRecordServiceImpl extends ServiceImpl<ZzzUserRecordMapper, Z
 
     private final ZzzAchievementService zzzAchievementService;
     private final ZzzBranchService zzzBranchService;
-    private final AccountService accountService;
 
     /**
      * Get all ZZZ achievements with empty records

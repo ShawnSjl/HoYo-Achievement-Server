@@ -19,7 +19,6 @@ public class SrUserRecordServiceImpl extends ServiceImpl<SrUserRecordMapper, SrU
 
     private final SrAchievementService srAchievementService;
     private final SrBranchService srBranchService;
-    private final AccountService accountService;
 
     /**
      * Get all SR achievements with empty records
