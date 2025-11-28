@@ -67,13 +67,14 @@ public class SrUserRecordServiceImpl extends ServiceImpl<SrUserRecordMapper, SrU
 
         // Update achievements in same branch
         ServiceResponse<List<Integer>> response = srBranchService.getAchievementInSameBranch(achievementId);
-        if (response.success() && !response.data().isEmpty()) {
+        if (!response.success()) {
+            throw new RuntimeException("Failed to get SR achievements in same branch.");
+        }
+        if (!response.data().isEmpty()) {
             Integer branchStatus = completeStatus == 1 ? 2 : 0;
             for (Integer achievement : response.data()) {
                 updateRecord(uuid, achievement, branchStatus);
             }
-        } else {
-            throw new RuntimeException("Failed to get SR achievements in same branch.");
         }
         return ServiceResponse.success("Update SR achievement record successfully.");
     }

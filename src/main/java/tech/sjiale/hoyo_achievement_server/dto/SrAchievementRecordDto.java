@@ -4,12 +4,12 @@ import lombok.Data;
 
 @Data
 public class SrAchievementRecordDto {
-    private Integer achievement_id;
+    private Integer achievementId;
     private String className;
     private String name;
     private String description;
-    private Integer reward_level;
+    private Integer rewardLevel;
     private Integer hidden;
-    private String game_version;
+    private String gameVersion;
     private Integer complete;
 }

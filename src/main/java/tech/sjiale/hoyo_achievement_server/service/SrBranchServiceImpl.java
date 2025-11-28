@@ -21,7 +21,9 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
      * @return List of SR branches
      */
     public ServiceResponse<List<SrBranch>> getAllBranches() {
-        List<SrBranch> branches = this.list();
+        List<SrBranch> branches = this.lambdaQuery()
+                .orderByAsc(SrBranch::getBranchId)
+                .list();
         if (branches == null || branches.isEmpty()) {
             return ServiceResponse.error("No SR branches found.");
         }

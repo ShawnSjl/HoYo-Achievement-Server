@@ -21,7 +21,9 @@ public class ZzzBranchServiceImpl extends ServiceImpl<ZzzBranchMapper, ZzzBranch
      * @return List of ZZZ branches
      */
     public ServiceResponse<List<ZzzBranch>> getAllBranches() {
-        List<ZzzBranch> branches = this.list();
+        List<ZzzBranch> branches = this.lambdaQuery()
+                .orderByAsc(ZzzBranch::getBranchId)
+                .list();
         if (branches == null || branches.isEmpty()) {
             return ServiceResponse.error("No ZZZ branches found.");
         }

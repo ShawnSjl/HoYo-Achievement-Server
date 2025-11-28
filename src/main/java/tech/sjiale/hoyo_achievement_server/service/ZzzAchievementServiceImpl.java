@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tech.sjiale.hoyo_achievement_server.dto.BasicAchievementDto;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.ZzzAchievement;
 import tech.sjiale.hoyo_achievement_server.mapper.ZzzAchievementMapper;
@@ -20,11 +19,11 @@ public class ZzzAchievementServiceImpl extends ServiceImpl<ZzzAchievementMapper,
      * Get ZZZ achievement by id
      *
      * @param achievementId achievement id
-     * @return ServiceResponse with BasicAchievementDto
+     * @return ServiceResponse with ZzzAchievement
      */
-    public ServiceResponse<BasicAchievementDto> getAchievementById(Integer achievementId) {
+    public ServiceResponse<ZzzAchievement> getAchievementById(Integer achievementId) {
         // Get achievement by id
-        BasicAchievementDto achievement = this.baseMapper.getBasicById(achievementId);
+        ZzzAchievement achievement = this.lambdaQuery().eq(ZzzAchievement::getAchievementId, achievementId).one();
         if (achievement == null) {
             log.error("No ZZZ achievement found with id: {}", achievementId);
             return ServiceResponse.error("No ZZZ achievement found with id: " + achievementId);

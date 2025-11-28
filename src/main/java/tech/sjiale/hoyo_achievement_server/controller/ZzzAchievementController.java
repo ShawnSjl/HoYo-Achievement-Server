@@ -101,7 +101,7 @@ public class ZzzAchievementController {
         }
 
         // Check if the complete status is valid
-        if (request.getCompleteStatus() < 0 || request.getCompleteStatus() > 2) {
+        if (request.getCompleteStatus() < 0 || request.getCompleteStatus() > 1) {
             return SaResult.error("更新状态非法").setCode(HttpStatus.BAD_REQUEST.value());
         }
 
