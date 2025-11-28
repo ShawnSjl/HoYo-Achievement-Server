@@ -9,6 +9,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import tech.sjiale.hoyo_achievement_server.dto.UserExposeDto;
 import tech.sjiale.hoyo_achievement_server.dto.user_request.*;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.User;
@@ -90,7 +91,6 @@ public class UserController {
      */
     @GetMapping("all")
     public SaResult getAllUsers() {
-        // FIXME: do not return hashed password to client
         // Check if the user is login
         if (AuthUtil.isNotLogin()) {
             return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
@@ -105,7 +105,7 @@ public class UserController {
         }
 
         // Get all users
-        ServiceResponse<List<User>> response = userService.getAllUsers();
+        ServiceResponse<List<UserExposeDto>> response = userService.getAllUsers();
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("获取全部用户失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());

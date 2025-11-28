@@ -29,5 +29,5 @@ public class User {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updated_at = LocalDateTime.now();
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }

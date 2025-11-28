@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
+import tech.sjiale.hoyo_achievement_server.dto.UserExposeDto;
 import tech.sjiale.hoyo_achievement_server.entity.Account;
 import tech.sjiale.hoyo_achievement_server.entity.User;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserRole;
@@ -56,8 +57,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      *
      * @return ServiceResponse with a list of User objects
      */
-    public ServiceResponse<List<User>> getAllUsers() {
-        List<User> users = this.list();
+    public ServiceResponse<List<UserExposeDto>> getAllUsers() {
+        List<UserExposeDto> users = this.baseMapper.selectAll();
         if (users == null || users.isEmpty()) {
             // There should always be at least one user that is the root user
             return ServiceResponse.error("No user found.");
