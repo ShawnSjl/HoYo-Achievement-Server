@@ -28,7 +28,9 @@ public class ZzzUserRecordServiceImpl extends ServiceImpl<ZzzUserRecordMapper, Z
      */
     public ServiceResponse<List<ZzzAchievementRecordDto>> getAllAchievementsEmptyRecord() {
         List<ZzzAchievementRecordDto> list = this.baseMapper.selectAllAchievementsWithEmptyRecord();
-        log.debug("Get all ZZZ achievements with empty records.");
+        if (list == null || list.isEmpty()) {
+            return ServiceResponse.error("No ZZZ achievements with empty records found.");
+        }
         return ServiceResponse.success("Get all ZZZ achievements with empty records successfully.", list);
     }
 
@@ -40,8 +42,10 @@ public class ZzzUserRecordServiceImpl extends ServiceImpl<ZzzUserRecordMapper, Z
      */
     public ServiceResponse<List<ZzzAchievementRecordDto>> getAllAchievementsRecordByUUID(String uuid) {
         List<ZzzAchievementRecordDto> list = this.baseMapper.selectAllAchievementsRecordByUUID(uuid);
-        log.debug("Get all ZZZ achievements records by uuid: {}", uuid);
-        return ServiceResponse.success("Get all ZZZ achievements records by uuid successfully.", list);
+        if (list == null || list.isEmpty()) {
+            return ServiceResponse.error("No ZZZ achievements records found.");
+        }
+        return ServiceResponse.success("Get all ZZZ achievements records by uuid successfully: " + uuid, list);
     }
 
     /**
@@ -53,17 +57,10 @@ public class ZzzUserRecordServiceImpl extends ServiceImpl<ZzzUserRecordMapper, Z
      * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<Boolean> updateRecordById(String uuid, Integer achievementId, Integer completeStatus) {
-        // Check if an account exists
-        if (!accountService.getAccountByUuid(uuid).success()) {
-            log.error("Account uuid doesn't exist: {}", uuid);
-            throw new IllegalArgumentException("Account uuid doesn't exist.");
-        }
-
+    public ServiceResponse<?> updateRecordById(String uuid, Integer achievementId, Integer completeStatus) {
         // Check if achievement exists
         if (!zzzAchievementService.getAchievementById(achievementId).success()) {
-            log.error("Achievement id doesn't exist: {}", achievementId);
-            throw new IllegalArgumentException("ZZZ Achievement id doesn't exist.");
+            return ServiceResponse.error("ZZZ Achievement id doesn't exist: " + achievementId);
         }
 
         // Update current achievement record
@@ -79,9 +76,7 @@ public class ZzzUserRecordServiceImpl extends ServiceImpl<ZzzUserRecordMapper, Z
         } else {
             throw new RuntimeException("Failed to get ZZZ achievements in same branch.");
         }
-
-        log.debug("Update ZZZ achievement record successfully.");
-        return ServiceResponse.success("Update ZZZ achievement record successfully.", true);
+        return ServiceResponse.success("Update ZZZ achievement record successfully.");
     }
 
     /**

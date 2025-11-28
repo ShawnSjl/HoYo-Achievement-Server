@@ -22,13 +22,9 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
      */
     public ServiceResponse<List<SrBranch>> getAllBranches() {
         List<SrBranch> branches = this.list();
-
         if (branches == null || branches.isEmpty()) {
-            log.error("No SR branches found.");
             return ServiceResponse.error("No SR branches found.");
         }
-
-        log.debug("Get all SR branches successfully.");
         return ServiceResponse.success("Get all SR branches successfully.", branches);
     }
 

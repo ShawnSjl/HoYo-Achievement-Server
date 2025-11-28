@@ -22,13 +22,9 @@ public class ZzzBranchServiceImpl extends ServiceImpl<ZzzBranchMapper, ZzzBranch
      */
     public ServiceResponse<List<ZzzBranch>> getAllBranches() {
         List<ZzzBranch> branches = this.list();
-
         if (branches == null || branches.isEmpty()) {
-            log.error("No ZZZ branches found.");
             return ServiceResponse.error("No ZZZ branches found.");
         }
-
-        log.debug("Get all ZZZ branches successfully.");
         return ServiceResponse.success("Get all ZZZ branches successfully.", branches);
     }
 

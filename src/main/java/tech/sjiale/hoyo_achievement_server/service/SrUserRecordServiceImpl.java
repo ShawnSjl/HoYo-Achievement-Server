@@ -31,7 +31,6 @@ public class SrUserRecordServiceImpl extends ServiceImpl<SrUserRecordMapper, SrU
         if (list == null || list.isEmpty()) {
             return ServiceResponse.error("No SR achievements with empty records found.");
         }
-        log.debug("Get all SR achievements with empty records.");
         return ServiceResponse.success("Get all SR achievements with empty records successfully.", list);
     }
 
@@ -46,8 +45,7 @@ public class SrUserRecordServiceImpl extends ServiceImpl<SrUserRecordMapper, SrU
         if (list == null || list.isEmpty()) {
             return ServiceResponse.error("No SR achievements records found.");
         }
-        log.debug("Get all SR achievements records by uuid: {}", uuid);
-        return ServiceResponse.success("Get all SR achievements records by uuid successfully.", list);
+        return ServiceResponse.success("Get all SR achievements records by uuid successfully: " + uuid, list);
     }
 
     /**
@@ -59,17 +57,10 @@ public class SrUserRecordServiceImpl extends ServiceImpl<SrUserRecordMapper, SrU
      * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<Boolean> updateRecordById(String uuid, Integer achievementId, Integer completeStatus) {
-        // Check if the account exists
-        if (!accountService.getAccountByUuid(uuid).success()) {
-            log.error("Account uuid doesn't exist: {}", uuid);
-            throw new IllegalArgumentException("Account uuid doesn't exist.");
-        }
-
+    public ServiceResponse<?> updateRecordById(String uuid, Integer achievementId, Integer completeStatus) {
         // Check if achievement exists
         if (!srAchievementService.getAchievementById(achievementId).success()) {
-            log.error("Achievement id doesn't exist: {}", achievementId);
-            throw new IllegalArgumentException("SR Achievement id doesn't exist.");
+            return ServiceResponse.error("SR Achievement id doesn't exist: " + achievementId);
         }
 
         // Update current achievement record
@@ -85,9 +76,7 @@ public class SrUserRecordServiceImpl extends ServiceImpl<SrUserRecordMapper, SrU
         } else {
             throw new RuntimeException("Failed to get SR achievements in same branch.");
         }
-
-        log.debug("Update SR achievement record successfully.");
-        return ServiceResponse.success("Update SR achievement record successfully.", true);
+        return ServiceResponse.success("Update SR achievement record successfully.");
     }
 
     /**

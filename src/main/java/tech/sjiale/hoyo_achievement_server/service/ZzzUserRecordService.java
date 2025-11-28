@@ -11,6 +11,6 @@ public interface ZzzUserRecordService extends IService<ZzzUserRecord> {
     ServiceResponse<List<ZzzAchievementRecordDto>> getAllAchievementsEmptyRecord();
 
     ServiceResponse<List<ZzzAchievementRecordDto>> getAllAchievementsRecordByUUID(String uuid);
-    
-    ServiceResponse<Boolean> updateRecordById(String uuid, Integer achievementId, Integer completeStatus);
+
+    ServiceResponse<?> updateRecordById(String uuid, Integer achievementId, Integer completeStatus);
 }

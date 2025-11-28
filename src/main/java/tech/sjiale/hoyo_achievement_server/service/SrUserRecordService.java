@@ -12,5 +12,5 @@ public interface SrUserRecordService extends IService<SrUserRecord> {
 
     ServiceResponse<List<SrAchievementRecordDto>> getAllAchievementsRecordByUUID(String uuid);
 
-    ServiceResponse<Boolean> updateRecordById(String uuid, Integer achievementId, Integer completeStatus);
+    ServiceResponse<?> updateRecordById(String uuid, Integer achievementId, Integer completeStatus);
 }
