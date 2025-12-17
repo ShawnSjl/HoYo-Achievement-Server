@@ -20,7 +20,7 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: class
+                  name: class_name
                   type: VARCHAR(64)
                   constraints:
                     nullable: false
@@ -38,12 +38,6 @@ databaseChangeLog:
                   name: reward_level
                   type: INT
                   defaultValueNumeric: 1
-                  constraints:
-                    nullable: false
-              - column:
-                  name: hidden
-                  type: INT
-                  defaultValueNumeric: 0
                   constraints:
                     nullable: false
               - column:

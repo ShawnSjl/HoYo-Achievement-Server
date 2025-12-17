@@ -23,9 +23,6 @@ public class ZzzAchievement {
     @TableField(value = "reward_level")
     private Integer rewardLevel;
 
-    @TableField(value = "hidden")
-    private Integer hidden;
-
     @TableField(value = "game_version")
     private String gameVersion;
 }

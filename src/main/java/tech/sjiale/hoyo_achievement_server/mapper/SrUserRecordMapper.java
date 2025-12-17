@@ -13,11 +13,10 @@ public interface SrUserRecordMapper extends BaseMapper<SrUserRecord> {
     @Select("""
                 SELECT
                     sa.achievement_id,
-                    sa.class AS className,
+                    sa.class_name,
                     sa.name,
                     sa.description,
                     sa.reward_level,
-                    sa.hidden,
                     sa.game_version,
                     0 AS complete
                 FROM sr_achievement sa
@@ -28,11 +27,10 @@ public interface SrUserRecordMapper extends BaseMapper<SrUserRecord> {
     @Select("""
                 SELECT
                     sa.achievement_id,
-                    sa.class AS className,
+                    sa.class_name,
                     sa.name,
                     sa.description,
                     sa.reward_level,
-                    sa.hidden,
                     sa.game_version,
                     COALESCE(sur.complete, 0) AS complete
                 FROM sr_achievement sa

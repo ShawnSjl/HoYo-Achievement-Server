@@ -17,7 +17,6 @@ public interface ZzzUserRecordMapper extends BaseMapper<ZzzUserRecord> {
                     za.name,
                     za.description,
                     za.reward_level,
-                    za.hidden,
                     za.game_version,
                     0 AS complete
                 FROM zzz_achievement za
@@ -32,7 +31,6 @@ public interface ZzzUserRecordMapper extends BaseMapper<ZzzUserRecord> {
                     za.name,
                     za.description,
                     za.reward_level,
-                    za.hidden,
                     za.game_version,
                     COALESCE(zur.complete, 0) AS complete
                 FROM zzz_achievement za

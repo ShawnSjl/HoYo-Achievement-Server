@@ -43,16 +43,15 @@ public class SrAchievementServiceImpl extends ServiceImpl<SrAchievementMapper, S
     public ServiceResponse<?> insertAchievements(List<Map<String, Object>> achievementMapList) {
         for (Map<String, Object> achievementMap : achievementMapList) {
             Integer achievementId = (Integer) achievementMap.get("achievement_id");
-            String className = achievementMap.get("class").toString();
+            String className = achievementMap.get("class_name").toString();
             String name = achievementMap.get("name").toString();
             String description = achievementMap.get("description").toString();
             Integer rewardLevel = (Integer) achievementMap.get("reward_level");
-            Integer hidden = (Integer) achievementMap.get("hidden");
             String gameVersion = achievementMap.get("game_version").toString();
 
-            if (achievementId == null || className == null || name == null || description == null || rewardLevel == null || hidden == null || gameVersion == null) {
-                log.error("Invalid achievement data: achievement_id={}, class={}, name={}, description={}, reward_level={}, hidden={}, game_version={}", achievementId, className, name, description, rewardLevel, hidden, gameVersion);
-                throw new IllegalArgumentException("Invalid achievement data.");
+            if (achievementId == null || className == null || name == null || description == null || rewardLevel == null || gameVersion == null) {
+                log.error("Invalid achievement data: achievement_id={}, class={}, name={}, description={}, reward_level={}, game_version={}", achievementId, className, name, description, rewardLevel, gameVersion);
+                throw new IllegalArgumentException("Invalid SR achievement data.");
             }
 
             SrAchievement achievement = new SrAchievement();
@@ -61,7 +60,6 @@ public class SrAchievementServiceImpl extends ServiceImpl<SrAchievementMapper, S
             achievement.setName(name);
             achievement.setDescription(description);
             achievement.setRewardLevel(rewardLevel);
-            achievement.setHidden(hidden);
             achievement.setGameVersion(gameVersion);
             this.save(achievement);
         }

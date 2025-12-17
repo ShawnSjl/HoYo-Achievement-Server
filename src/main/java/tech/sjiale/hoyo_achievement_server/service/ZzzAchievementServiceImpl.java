@@ -47,13 +47,12 @@ public class ZzzAchievementServiceImpl extends ServiceImpl<ZzzAchievementMapper,
             String name = achievementMap.get("name").toString();
             String description = achievementMap.get("description").toString();
             Integer rewardLevel = (Integer) achievementMap.get("reward_level");
-            Integer hidden = (Integer) achievementMap.get("hidden");
             String gameVersion = achievementMap.get("game_version").toString();
 
-            if (achievementId == null || classId == null || name == null || description == null || rewardLevel == null || hidden == null || gameVersion == null) {
+            if (achievementId == null || classId == null || name == null || description == null || rewardLevel == null || gameVersion == null) {
                 log.error("Invalid achievement data: achievement_id={}, class={}, name={}, description={}, " +
-                        "reward_level={}, hidden={}, game_version={}", achievementId, classId, name, description, rewardLevel, hidden, gameVersion);
-                throw new IllegalArgumentException("Invalid achievement data.");
+                        "reward_level={}, game_version={}", achievementId, classId, name, description, rewardLevel, gameVersion);
+                throw new IllegalArgumentException("Invalid ZZZ achievement data.");
             }
 
             ZzzAchievement achievement = new ZzzAchievement();
@@ -62,7 +61,6 @@ public class ZzzAchievementServiceImpl extends ServiceImpl<ZzzAchievementMapper,
             achievement.setName(name);
             achievement.setDescription(description);
             achievement.setRewardLevel(rewardLevel);
-            achievement.setHidden(hidden);
             achievement.setGameVersion(gameVersion);
             this.save(achievement);
         }

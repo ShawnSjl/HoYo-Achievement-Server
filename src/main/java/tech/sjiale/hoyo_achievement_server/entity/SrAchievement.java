@@ -11,7 +11,7 @@ public class SrAchievement {
     @TableId(value = "achievement_id")
     private Integer achievementId;
 
-    @TableField(value = "class")
+    @TableField(value = "class_name")
     private String className;
 
     @TableField(value = "name")
@@ -22,9 +22,6 @@ public class SrAchievement {
 
     @TableField(value = "reward_level")
     private Integer rewardLevel;
-
-    @TableField(value = "hidden")
-    private Integer hidden;
 
     @TableField(value = "game_version")
     private String gameVersion;
