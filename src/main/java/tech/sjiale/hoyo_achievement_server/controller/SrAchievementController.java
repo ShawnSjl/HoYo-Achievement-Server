@@ -1,5 +1,6 @@
 package tech.sjiale.hoyo_achievement_server.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,6 @@ import tech.sjiale.hoyo_achievement_server.service.AccountService;
 import tech.sjiale.hoyo_achievement_server.service.SrBranchService;
 import tech.sjiale.hoyo_achievement_server.service.SrUserRecordService;
 import tech.sjiale.hoyo_achievement_server.service.UserService;
-import tech.sjiale.hoyo_achievement_server.util.AuthUtil;
 
 import java.util.List;
 
@@ -35,12 +35,8 @@ public class SrAchievementController {
     private final SrBranchService srBranchService;
 
     @GetMapping("all")
+    @SaCheckLogin
     public SaResult getAllAchievements(@RequestBody AllUserRecordRequest request) {
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
-        }
-
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
@@ -84,12 +80,8 @@ public class SrAchievementController {
      * @return SaResult
      */
     @PutMapping("update")
+    @SaCheckLogin
     public SaResult updateAchievementById(@RequestBody UpdateRecordRequest request) {
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
-        }
-
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 

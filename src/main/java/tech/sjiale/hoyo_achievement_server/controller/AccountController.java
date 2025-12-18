@@ -1,5 +1,6 @@
 package tech.sjiale.hoyo_achievement_server.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,6 @@ import tech.sjiale.hoyo_achievement_server.entity.nume.UserStatus;
 import tech.sjiale.hoyo_achievement_server.service.AccountService;
 import tech.sjiale.hoyo_achievement_server.service.UserService;
 import tech.sjiale.hoyo_achievement_server.util.ParameterChecker;
-import tech.sjiale.hoyo_achievement_server.util.AuthUtil;
 
 import java.util.List;
 import java.util.Objects;
@@ -39,12 +39,8 @@ public class AccountController {
      * @return SaResult
      */
     @GetMapping("/get-by-user-id")
+    @SaCheckLogin
     public SaResult getAccountByUserId() {
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
-        }
-
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
@@ -67,12 +63,8 @@ public class AccountController {
      * @return SaResult
      */
     @PostMapping("/create")
+    @SaCheckLogin
     public SaResult createAccount(@RequestBody Account account) {
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
-        }
-
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
@@ -110,16 +102,12 @@ public class AccountController {
      * @return SaResult
      */
     @PutMapping("/update-name")
+    @SaCheckLogin
     public SaResult updateAccountName(@RequestBody AccountUpdateNameRequest req) {
         // Validate input
         if (ParameterChecker.isAccountUuidInvalid(req.getAccountUuid())
                 || ParameterChecker.isAccountNameInvalid(req.getAccountName())) {
             return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
-        }
-
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
         // Get user id from token
@@ -150,16 +138,12 @@ public class AccountController {
      * @return SaResult
      */
     @PutMapping("/update-in-game-uid")
+    @SaCheckLogin
     public SaResult updateAccountInGameUid(@RequestBody AccountUpdateUidRequest req) {
         // Validate input
         if (ParameterChecker.isAccountUuidInvalid(req.getAccountUuid())
                 || ParameterChecker.isAccountInGameUidInvalid(req.getAccountInGameUid())) {
             return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
-        }
-
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
         // Get user id from token
@@ -190,15 +174,11 @@ public class AccountController {
      * @return SaResult
      */
     @DeleteMapping("/delete")
+    @SaCheckLogin
     public SaResult deleteAccount(@RequestBody AccountDeleteRequest req) {
         // Validate input
         if (ParameterChecker.isAccountUuidInvalid(req.getAccountUuid())) {
             return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
-        }
-
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
         // Get user id from token

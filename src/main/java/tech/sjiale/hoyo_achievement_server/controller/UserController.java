@@ -1,5 +1,6 @@
 package tech.sjiale.hoyo_achievement_server.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,6 @@ import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.User;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserRole;
 import tech.sjiale.hoyo_achievement_server.service.UserService;
-import tech.sjiale.hoyo_achievement_server.util.AuthUtil;
 import tech.sjiale.hoyo_achievement_server.util.ParameterChecker;
 
 import java.util.HashMap;
@@ -97,12 +97,8 @@ public class UserController {
      * @return SaResult
      */
     @GetMapping("is-admin")
+    @SaCheckLogin
     public SaResult isAdmin() {
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
-        }
-
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
@@ -119,12 +115,8 @@ public class UserController {
      * @return SaResult with a list of User objects
      */
     @GetMapping("all")
+    @SaCheckLogin
     public SaResult getAllUsers() {
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
-        }
-
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
@@ -151,17 +143,13 @@ public class UserController {
      * @return SaResult
      */
     @PostMapping("create")
+    @SaCheckLogin
     public SaResult createUser(@RequestBody CreateRequest request) {
         // Check if the username and password are valid
         if (ParameterChecker.isUsernameInvalid(request.getUsername()) ||
                 ParameterChecker.isPasswordInvalid(request.getPassword())) {
             log.error("Invalid username or password for new user.");
             return SaResult.error("用户名或密码格式错误").setCode(HttpStatus.BAD_REQUEST.value());
-        }
-
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
         // Get user id from token
@@ -189,16 +177,12 @@ public class UserController {
      * @return SaResult
      */
     @PutMapping("update-username")
+    @SaCheckLogin
     public SaResult updateUsername(@RequestBody UpdateUsernameRequest request) {
         // Check if the username is valid
         if (ParameterChecker.isUsernameInvalid(request.getUsername())) {
             log.error("Invalid new username: {}", request.getUsername());
             return SaResult.error("新用户名格式错误").setCode(HttpStatus.BAD_REQUEST.value());
-        }
-
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
         // Get user id from token
@@ -221,16 +205,12 @@ public class UserController {
      * @return SaResult
      */
     @PutMapping("update-password")
+    @SaCheckLogin
     public SaResult updatePassword(@RequestBody UpdatePasswordRequest request) {
         // Check if the password is valid
         if (ParameterChecker.isPasswordInvalid(request.getPassword())) {
             log.error("Invalid new password: {}", request.getPassword());
             return SaResult.error("新密码格式错误").setCode(HttpStatus.BAD_REQUEST.value());
-        }
-
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
         // Get user id from token
@@ -250,12 +230,8 @@ public class UserController {
      * @return SaResult
      */
     @PutMapping("update-status")
+    @SaCheckLogin
     public SaResult updateUserStatus(@RequestBody UpdateStatusRequest request) {
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
-        }
-
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
@@ -282,12 +258,8 @@ public class UserController {
      * @return SaResult
      */
     @PutMapping("update-role")
+    @SaCheckLogin
     public SaResult updateUserRole(@RequestBody UpdateRoleRequest request) {
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
-        }
-
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
@@ -313,12 +285,8 @@ public class UserController {
      * @return SaResult
      */
     @DeleteMapping("delete")
+    @SaCheckLogin
     public SaResult deleteUser() {
-        // Check if the user is login
-        if (AuthUtil.isNotLogin()) {
-            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
-        }
-
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
