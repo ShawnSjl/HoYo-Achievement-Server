@@ -83,7 +83,7 @@ public class SrAchievementController {
      * @param request UpdateRecordRequest with achievement id and record status
      * @return SaResult
      */
-    @PostMapping("update")
+    @PutMapping("update")
     public SaResult updateAchievementById(@RequestBody UpdateRecordRequest request) {
         // Check if the user is login
         if (AuthUtil.isNotLogin()) {

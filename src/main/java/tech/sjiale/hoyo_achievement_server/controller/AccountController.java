@@ -66,7 +66,7 @@ public class AccountController {
      * @param account Account entity
      * @return SaResult
      */
-    @PutMapping("/create")
+    @PostMapping("/create")
     public SaResult createAccount(@RequestBody Account account) {
         // Check if the user is login
         if (AuthUtil.isNotLogin()) {

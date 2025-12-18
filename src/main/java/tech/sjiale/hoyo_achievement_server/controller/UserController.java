@@ -67,7 +67,7 @@ public class UserController {
      *
      * @return SaResult
      */
-    @GetMapping("isLogin")
+    @GetMapping("is-login")
     public SaResult isLogin() {
         return SaResult.ok("是否登录：" + StpUtil.isLogin()).setData(StpUtil.isLogin());
     }
