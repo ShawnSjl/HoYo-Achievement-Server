@@ -18,7 +18,9 @@ import tech.sjiale.hoyo_achievement_server.service.UserService;
 import tech.sjiale.hoyo_achievement_server.util.AuthUtil;
 import tech.sjiale.hoyo_achievement_server.util.ParameterChecker;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -59,7 +61,13 @@ public class UserController {
 
         // Login
         StpUtil.login(userResponse.data().getId());
-        return SaResult.ok("登录成功").setData(StpUtil.getTokenInfo());
+
+        // Set response data
+        Map<String, Object> map = new HashMap<>();
+        map.put("token", StpUtil.getTokenInfo().tokenValue);
+        map.put("username", userResponse.data().getUsername());
+        map.put("isAdmin", userResponse.data().getRole() != UserRole.USER);
+        return SaResult.ok("登录成功").setData(map);
     }
 
     /**
@@ -81,6 +89,27 @@ public class UserController {
     public SaResult logout() {
         StpUtil.logout();
         return SaResult.ok("用户已登出");
+    }
+
+    /**
+     * Check if the user is admin or root
+     *
+     * @return SaResult
+     */
+    @GetMapping("is-admin")
+    public SaResult isAdmin() {
+        // Check if the user is login
+        if (AuthUtil.isNotLogin()) {
+            return SaResult.error("用户未登录").setCode(HttpStatus.UNAUTHORIZED.value());
+        }
+
+        // Get user id from token
+        Long userId = StpUtil.getLoginIdAsLong();
+
+        // Check if the user is admin or root
+        boolean isAdmin = !isUserNotAdminOrRoot(userId);
+
+        return SaResult.ok().setData(isAdmin);
     }
 
     /**
