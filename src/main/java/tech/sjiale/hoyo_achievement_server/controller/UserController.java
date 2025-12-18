@@ -1,6 +1,8 @@
 package tech.sjiale.hoyo_achievement_server.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.annotation.SaMode;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import lombok.RequiredArgsConstructor;
@@ -103,7 +105,12 @@ public class UserController {
         Long userId = StpUtil.getLoginIdAsLong();
 
         // Check if the user is admin or root
-        boolean isAdmin = !isUserNotAdminOrRoot(userId);
+        ServiceResponse<User> currentUser = userService.getUserById(userId);
+        if (!currentUser.success()) {
+            log.error(currentUser.message());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, currentUser.message());
+        }
+        boolean isAdmin = currentUser.data().getRole() != UserRole.USER;
 
         return SaResult.ok().setData(isAdmin);
     }
@@ -116,15 +123,8 @@ public class UserController {
      */
     @GetMapping("all")
     @SaCheckLogin
+    @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
     public SaResult getAllUsers() {
-        // Get user id from token
-        Long userId = StpUtil.getLoginIdAsLong();
-
-        // Check if the user is admin or root
-        if (isUserNotAdminOrRoot(userId)) {
-            return SaResult.error("用户无权限").setCode(HttpStatus.FORBIDDEN.value());
-        }
-
         // Get all users
         ServiceResponse<List<UserExposeDto>> response = userService.getAllUsers();
         if (!response.success()) {
@@ -144,20 +144,13 @@ public class UserController {
      */
     @PostMapping("create")
     @SaCheckLogin
+    @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
     public SaResult createUser(@RequestBody CreateRequest request) {
         // Check if the username and password are valid
         if (ParameterChecker.isUsernameInvalid(request.getUsername()) ||
                 ParameterChecker.isPasswordInvalid(request.getPassword())) {
             log.error("Invalid username or password for new user.");
             return SaResult.error("用户名或密码格式错误").setCode(HttpStatus.BAD_REQUEST.value());
-        }
-
-        // Get user id from token
-        Long userId = StpUtil.getLoginIdAsLong();
-
-        // Check if the user is admin or root
-        if (isUserNotAdminOrRoot(userId)) {
-            return SaResult.error("用户无权限").setCode(HttpStatus.FORBIDDEN.value());
         }
 
         // Create a new user
@@ -231,15 +224,8 @@ public class UserController {
      */
     @PutMapping("update-status")
     @SaCheckLogin
+    @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
     public SaResult updateUserStatus(@RequestBody UpdateStatusRequest request) {
-        // Get user id from token
-        Long userId = StpUtil.getLoginIdAsLong();
-
-        // Check if the user is admin or root
-        if (isUserNotAdminOrRoot(userId)) {
-            return SaResult.error("用户无权限").setCode(HttpStatus.FORBIDDEN.value());
-        }
-
         // Update user status
         ServiceResponse<?> response = userService.updateUserStatus(request.getUserId(), request.getStatus());
         if (!response.success()) {
@@ -259,15 +245,8 @@ public class UserController {
      */
     @PutMapping("update-role")
     @SaCheckLogin
+    @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
     public SaResult updateUserRole(@RequestBody UpdateRoleRequest request) {
-        // Get user id from token
-        Long userId = StpUtil.getLoginIdAsLong();
-
-        // Check if the user is admin or root
-        if (isUserNotAdminOrRoot(userId)) {
-            return SaResult.error("用户无权限").setCode(HttpStatus.FORBIDDEN.value());
-        }
-
         // Update user role
         ServiceResponse<?> response = userService.updateUserRole(request.getUserId(), request.getRole());
         if (!response.success()) {
@@ -302,25 +281,5 @@ public class UserController {
 
         log.info(response.message());
         return SaResult.ok("用户删除成功");
-    }
-
-
-    /**
-     * Helper method to check if the user is admin or root
-     *
-     * @param userId user id
-     * @return true if admin or root, false otherwise
-     */
-    private boolean isUserNotAdminOrRoot(Long userId) {
-        ServiceResponse<User> currentUser = userService.getUserById(userId);
-        if (!currentUser.success()) {
-            log.error(currentUser.message());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, currentUser.message());
-        }
-        if (currentUser.data().getRole() == UserRole.USER) {
-            log.error("User {} is not admin or root.", userId);
-            return true;
-        }
-        return false;
     }
 }
