@@ -2,6 +2,7 @@ package tech.sjiale.hoyo_achievement_server.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.annotation.SaCheckSafe;
 import cn.dev33.satoken.annotation.SaMode;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
@@ -145,6 +146,7 @@ public class UserController {
     @PostMapping("create")
     @SaCheckLogin
     @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
+    @SaCheckSafe
     public SaResult createUser(@RequestBody CreateRequest request) {
         // Check if the username and password are valid
         if (ParameterChecker.isUsernameInvalid(request.getUsername()) ||
@@ -171,6 +173,7 @@ public class UserController {
      */
     @PutMapping("update-username")
     @SaCheckLogin
+    @SaCheckSafe
     public SaResult updateUsername(@RequestBody UpdateUsernameRequest request) {
         // Check if the username is valid
         if (ParameterChecker.isUsernameInvalid(request.getUsername())) {
@@ -199,6 +202,7 @@ public class UserController {
      */
     @PutMapping("update-password")
     @SaCheckLogin
+    @SaCheckSafe
     public SaResult updatePassword(@RequestBody UpdatePasswordRequest request) {
         // Check if the password is valid
         if (ParameterChecker.isPasswordInvalid(request.getPassword())) {
@@ -225,6 +229,7 @@ public class UserController {
     @PutMapping("update-status")
     @SaCheckLogin
     @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
+    @SaCheckSafe
     public SaResult updateUserStatus(@RequestBody UpdateStatusRequest request) {
         // Update user status
         ServiceResponse<?> response = userService.updateUserStatus(request.getUserId(), request.getStatus());
@@ -246,6 +251,7 @@ public class UserController {
     @PutMapping("update-role")
     @SaCheckLogin
     @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
+    @SaCheckSafe
     public SaResult updateUserRole(@RequestBody UpdateRoleRequest request) {
         // Update user role
         ServiceResponse<?> response = userService.updateUserRole(request.getUserId(), request.getRole());
@@ -265,6 +271,7 @@ public class UserController {
      */
     @DeleteMapping("delete")
     @SaCheckLogin
+    @SaCheckSafe
     public SaResult deleteUser() {
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
@@ -281,5 +288,36 @@ public class UserController {
 
         log.info(response.message());
         return SaResult.ok("用户删除成功");
+    }
+
+    @PostMapping("second-auth")
+    @SaCheckLogin
+    public SaResult secondAuth(@RequestBody SecondAuthRequest request) {
+        // Check if the password is valid
+        if (ParameterChecker.isPasswordInvalid(request.getPassword())) {
+            log.error("Invalid password.");
+            return SaResult.error("密码格式错误").setCode(HttpStatus.BAD_REQUEST.value());
+        }
+
+        // Get user id from token
+        Long userId = StpUtil.getLoginIdAsLong();
+
+        // Get current user
+        ServiceResponse<User> userResponse = userService.getUserById(userId);
+        if (!userResponse.success()) {
+            log.error(userResponse.message());
+            return SaResult.error("用户不存在").setCode(HttpStatus.UNAUTHORIZED.value());
+        }
+
+        // Check if the password matches
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        if (!passwordEncoder.matches(request.getPassword(), userResponse.data().getPassword())) {
+            log.error("Password doesn't match.");
+            return SaResult.error("二级验证失败").setCode(HttpStatus.UNAUTHORIZED.value());
+        }
+
+        // Open safe for 2 minutes
+        StpUtil.openSafe(120);
+        return SaResult.ok("二级验证成功");
     }
 }

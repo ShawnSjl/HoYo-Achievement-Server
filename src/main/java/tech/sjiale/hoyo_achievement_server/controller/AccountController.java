@@ -1,6 +1,7 @@
 package tech.sjiale.hoyo_achievement_server.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaCheckSafe;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import lombok.RequiredArgsConstructor;
@@ -175,6 +176,7 @@ public class AccountController {
      */
     @DeleteMapping("/delete")
     @SaCheckLogin
+    @SaCheckSafe
     public SaResult deleteAccount(@RequestBody AccountDeleteRequest req) {
         // Validate input
         if (ParameterChecker.isAccountUuidInvalid(req.getAccountUuid())) {
