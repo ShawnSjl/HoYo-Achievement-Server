@@ -25,7 +25,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/sr")
+@RequestMapping("/api/sr")
 @RequiredArgsConstructor
 public class SrAchievementController {
 

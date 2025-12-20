@@ -15,7 +15,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/info")
+@RequestMapping("/api/info")
 @RequiredArgsConstructor
 public class ServerInfoController {
 
