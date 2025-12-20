@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import tech.sjiale.hoyo_achievement_server.dto.account_request.AccountCreateRequest;
 import tech.sjiale.hoyo_achievement_server.dto.account_request.AccountUpdateNameRequest;
 import tech.sjiale.hoyo_achievement_server.dto.account_request.AccountUpdateUidRequest;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
@@ -65,7 +66,7 @@ public class AccountController {
      */
     @PostMapping("/create")
     @SaCheckLogin
-    public SaResult createAccount(@RequestBody Account account) {
+    public SaResult createAccount(@RequestBody AccountCreateRequest account) {
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
@@ -75,17 +76,22 @@ public class AccountController {
         }
 
         // Valid
-        if (!Objects.equals(account.getUserId(), userId)) {
-            log.error("Account user id {} doesn't match request user id {}.", account.getUserId(), userId);
-            return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
-        } else if (ParameterChecker.isAccountUuidInvalid(account.getAccountUuid())
+        if (ParameterChecker.isAccountUuidInvalid(account.getAccountUuid())
                 || ParameterChecker.isAccountNameInvalid(account.getAccountName())
                 || ParameterChecker.isAccountInGameUidInvalid(account.getAccountInGameUid())) {
             return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
         }
 
+        // Create an account instance
+        Account newAccount = new Account();
+        newAccount.setAccountUuid(account.getAccountUuid());
+        newAccount.setUserId(userId);
+        newAccount.setGameType(account.getGameType());
+        newAccount.setAccountName(account.getAccountName());
+        newAccount.setAccountInGameUid(account.getAccountInGameUid());
+
         // Create that account
-        ServiceResponse<?> response = accountService.createAccount(account);
+        ServiceResponse<?> response = accountService.createAccount(newAccount);
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("创建用户失败").setCode(HttpStatus.BAD_REQUEST.value());
