@@ -58,6 +58,7 @@ public class AccountController {
 
     /**
      * Create a new account;
+     * One user could have maximum 10 accounts;
      * Should only be called by the user itself;
      * Should be called after user login, satoken will authenticate the user
      *
@@ -80,6 +81,17 @@ public class AccountController {
                 || ParameterChecker.isAccountNameInvalid(account.getAccountName())
                 || ParameterChecker.isAccountInGameUidInvalid(account.getAccountInGameUid())) {
             return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
+        }
+
+        // Check if the user already has 10 accounts
+        ServiceResponse<List<Account>> allAccountsResponse = accountService.getAllAccountsByUserId(userId);
+        if (!allAccountsResponse.success()) {
+            log.error(allAccountsResponse.message());
+            return SaResult.error("获取已有账号错误").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        }
+        if (allAccountsResponse.data().size() >= 10) {
+            log.warn("User {} already has 10 accounts.", userId);
+            return SaResult.error("账号数量达到上限").setCode(HttpStatus.BAD_REQUEST.value());
         }
 
         // Create an account instance
