@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import tech.sjiale.hoyo_achievement_server.dto.achievement_request.AllUserRecordRequest;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.dto.SrAchievementRecordDto;
 import tech.sjiale.hoyo_achievement_server.dto.achievement_request.UpdateRecordRequest;
@@ -36,7 +35,7 @@ public class SrAchievementController {
 
     @GetMapping("all")
     @SaCheckLogin
-    public SaResult getAllAchievements(@RequestBody AllUserRecordRequest request) {
+    public SaResult getAllAchievements(@RequestParam String uuid) {
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
@@ -46,11 +45,11 @@ public class SrAchievementController {
         }
 
         // Check if the account uuid belongs to the user
-        if (isUserNotOwnAccount(userId, request.getUuid())) {
+        if (isUserNotOwnAccount(userId, uuid)) {
             return SaResult.error("非对应用户请求").setCode(HttpStatus.FORBIDDEN.value());
         }
 
-        ServiceResponse<List<SrAchievementRecordDto>> response = srUserRecordService.getAllAchievementsRecordByUUID(request.getUuid());
+        ServiceResponse<List<SrAchievementRecordDto>> response = srUserRecordService.getAllAchievementsRecordByUUID(uuid);
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("获取用户SR成就列表失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
