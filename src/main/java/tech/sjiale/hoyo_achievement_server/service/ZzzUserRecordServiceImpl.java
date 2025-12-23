@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
-import tech.sjiale.hoyo_achievement_server.dto.ZzzAchievementRecordDto;
 import tech.sjiale.hoyo_achievement_server.entity.ZzzUserRecord;
 import tech.sjiale.hoyo_achievement_server.mapper.ZzzUserRecordMapper;
 
@@ -21,28 +20,15 @@ public class ZzzUserRecordServiceImpl extends ServiceImpl<ZzzUserRecordMapper, Z
     private final ZzzBranchService zzzBranchService;
 
     /**
-     * Get all ZZZ achievements with empty records
-     *
-     * @return List of ZZZ achievements with empty records
-     */
-    public ServiceResponse<List<ZzzAchievementRecordDto>> getAllAchievementsEmptyRecord() {
-        List<ZzzAchievementRecordDto> list = this.baseMapper.selectAllAchievementsWithEmptyRecord();
-        if (list == null || list.isEmpty()) {
-            return ServiceResponse.error("No ZZZ achievements with empty records found.");
-        }
-        return ServiceResponse.success("Get all ZZZ achievements with empty records successfully.", list);
-    }
-
-    /**
      * Get all ZZZ achievements records by account uuid
      *
      * @param uuid Account uuid
      * @return List of ZZZ achievements records
      */
-    public ServiceResponse<List<ZzzAchievementRecordDto>> getAllAchievementsRecordByUUID(String uuid) {
-        List<ZzzAchievementRecordDto> list = this.baseMapper.selectAllAchievementsRecordByUUID(uuid);
-        if (list == null || list.isEmpty()) {
-            return ServiceResponse.error("No ZZZ achievements records found.");
+    public ServiceResponse<List<ZzzUserRecord>> getAllRecordByUUID(String uuid) {
+        List<ZzzUserRecord> list = this.lambdaQuery().eq(ZzzUserRecord::getAccountUuid, uuid).list();
+        if (list == null) {
+            return ServiceResponse.error("Failed to get ZZZ achievements records for uuid: " + uuid);
         }
         return ServiceResponse.success("Get all ZZZ achievements records by uuid successfully: " + uuid, list);
     }

@@ -34,6 +34,15 @@ public class ZzzAchievementServiceImpl extends ServiceImpl<ZzzAchievementMapper,
     }
 
     /**
+     * Get all ZZZ achievements
+     *
+     * @return ServiceResponse with a list of ZzzAchievement
+     */
+    public ServiceResponse<List<ZzzAchievement>> getAllAchievements() {
+        return ServiceResponse.success("Get all ZZZ achievements successfully.", this.list());
+    }
+
+    /**
      * Insert ZZZ achievements; should only be called by migration service
      *
      * @param achievementMapList List of achievement data
