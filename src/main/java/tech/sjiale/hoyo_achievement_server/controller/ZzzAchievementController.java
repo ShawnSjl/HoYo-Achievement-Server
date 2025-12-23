@@ -43,6 +43,12 @@ public class ZzzAchievementController {
         return SaResult.ok("ZZZ成就列表获取成功").setData(response.data());
     }
 
+    /**
+     * Get all records of an account
+     *
+     * @param uuid account uuid
+     * @return SaResult
+     */
     @GetMapping("account-records")
     @SaCheckLogin
     public SaResult getAccountRecords(@RequestParam String uuid) {
