@@ -10,6 +10,8 @@ import java.util.Map;
 public interface SrAchievementService extends IService<SrAchievement> {
     ServiceResponse<SrAchievement> getAchievementById(Integer achievementId);
 
+    ServiceResponse<List<SrAchievement>> getAllAchievements();
+
     // Import use
     ServiceResponse<?> insertAchievements(List<Map<String, Object>> achievementMapList);
 }

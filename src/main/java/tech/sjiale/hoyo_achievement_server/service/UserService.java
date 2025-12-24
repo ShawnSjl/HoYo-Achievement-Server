@@ -2,7 +2,7 @@ package tech.sjiale.hoyo_achievement_server.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
-import tech.sjiale.hoyo_achievement_server.dto.UserExposeDto;
+import tech.sjiale.hoyo_achievement_server.dto.user_request.UserExposeDto;
 import tech.sjiale.hoyo_achievement_server.entity.User;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserRole;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserStatus;

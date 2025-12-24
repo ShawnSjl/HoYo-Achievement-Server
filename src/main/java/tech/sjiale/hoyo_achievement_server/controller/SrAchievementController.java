@@ -9,16 +9,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
-import tech.sjiale.hoyo_achievement_server.dto.SrAchievementRecordDto;
 import tech.sjiale.hoyo_achievement_server.dto.achievement_request.UpdateRecordRequest;
-import tech.sjiale.hoyo_achievement_server.entity.Account;
-import tech.sjiale.hoyo_achievement_server.entity.SrBranch;
-import tech.sjiale.hoyo_achievement_server.entity.User;
+import tech.sjiale.hoyo_achievement_server.entity.*;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserStatus;
-import tech.sjiale.hoyo_achievement_server.service.AccountService;
-import tech.sjiale.hoyo_achievement_server.service.SrBranchService;
-import tech.sjiale.hoyo_achievement_server.service.SrUserRecordService;
-import tech.sjiale.hoyo_achievement_server.service.UserService;
+import tech.sjiale.hoyo_achievement_server.service.*;
 
 import java.util.List;
 
@@ -31,11 +25,33 @@ public class SrAchievementController {
     private final AccountService accountService;
     private final UserService userService;
     private final SrUserRecordService srUserRecordService;
+    private final SrAchievementService srAchievementService;
     private final SrBranchService srBranchService;
 
+    /**
+     * Get all SR achievements
+     *
+     * @return SaResult
+     */
     @GetMapping("all")
+    public SaResult getAllAchievements() {
+        ServiceResponse<List<SrAchievement>> response = srAchievementService.getAllAchievements();
+        if (!response.success()) {
+            log.error(response.message());
+            return SaResult.error("SR成就列表获取失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        }
+        return SaResult.ok("SR成就列表获取成功").setData(response.data());
+    }
+
+    /**
+     * Get all records of an account
+     *
+     * @param uuid account uuid
+     * @return SaResult
+     */
+    @GetMapping("account-records")
     @SaCheckLogin
-    public SaResult getAllAchievements(@RequestParam String uuid) {
+    public SaResult getAccountRecords(@RequestParam String uuid) {
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
@@ -49,27 +65,12 @@ public class SrAchievementController {
             return SaResult.error("非对应用户请求").setCode(HttpStatus.FORBIDDEN.value());
         }
 
-        ServiceResponse<List<SrAchievementRecordDto>> response = srUserRecordService.getAllAchievementsRecordByUUID(uuid);
+        ServiceResponse<List<SrUserRecord>> response = srUserRecordService.getAllRecordByUUID(uuid);
         if (!response.success()) {
             log.error(response.message());
-            return SaResult.error("获取用户SR成就列表失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return SaResult.error("账号SR成就记录获取失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
-        return SaResult.ok("获取用户成就列表成功").setData(response.data());
-    }
-
-    /**
-     * Get all achievements with an empty record list
-     *
-     * @return SaResult
-     */
-    @GetMapping("all-empty-record")
-    public SaResult getAllAchievementsWithEmptyRecord() {
-        ServiceResponse<List<SrAchievementRecordDto>> response = srUserRecordService.getAllAchievementsEmptyRecord();
-        if (!response.success()) {
-            log.error(response.message());
-            return SaResult.error("获取SR成就列表失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        }
-        return SaResult.ok("获取SR成就列表成功").setData(response.data());
+        return SaResult.ok("账号SR成就记录获取成功").setData(response.data());
     }
 
     /**

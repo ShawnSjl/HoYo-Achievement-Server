@@ -13,7 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import tech.sjiale.hoyo_achievement_server.dto.UserExposeDto;
+import tech.sjiale.hoyo_achievement_server.dto.user_request.UserExposeDto;
 import tech.sjiale.hoyo_achievement_server.dto.user_request.*;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.User;

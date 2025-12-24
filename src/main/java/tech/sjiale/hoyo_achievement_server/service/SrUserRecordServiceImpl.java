@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
-import tech.sjiale.hoyo_achievement_server.dto.SrAchievementRecordDto;
 import tech.sjiale.hoyo_achievement_server.entity.SrUserRecord;
 import tech.sjiale.hoyo_achievement_server.mapper.SrUserRecordMapper;
 
@@ -21,28 +20,15 @@ public class SrUserRecordServiceImpl extends ServiceImpl<SrUserRecordMapper, SrU
     private final SrBranchService srBranchService;
 
     /**
-     * Get all SR achievements with empty records
-     *
-     * @return List of SR achievements with empty records
-     */
-    public ServiceResponse<List<SrAchievementRecordDto>> getAllAchievementsEmptyRecord() {
-        List<SrAchievementRecordDto> list = this.baseMapper.selectAllAchievementsWithEmptyRecord();
-        if (list == null || list.isEmpty()) {
-            return ServiceResponse.error("No SR achievements with empty records found.");
-        }
-        return ServiceResponse.success("Get all SR achievements with empty records successfully.", list);
-    }
-
-    /**
      * Get all SR achievements records by account uuid
      *
      * @param uuid Account uuid
      * @return List of SR achievements records
      */
-    public ServiceResponse<List<SrAchievementRecordDto>> getAllAchievementsRecordByUUID(String uuid) {
-        List<SrAchievementRecordDto> list = this.baseMapper.selectAllAchievementsRecordByUUID(uuid);
-        if (list == null || list.isEmpty()) {
-            return ServiceResponse.error("No SR achievements records found.");
+    public ServiceResponse<List<SrUserRecord>> getAllRecordByUUID(String uuid) {
+        List<SrUserRecord> list = this.lambdaQuery().eq(SrUserRecord::getAccountUuid, uuid).list();
+        if (list == null) {
+            return ServiceResponse.error("Failed to get SR achievements records for uuid: " + uuid);
         }
         return ServiceResponse.success("Get all SR achievements records by uuid successfully: " + uuid, list);
     }
