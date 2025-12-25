@@ -202,19 +202,37 @@ public class UserController {
      */
     @PutMapping("update-password")
     @SaCheckLogin
-    @SaCheckSafe
     public SaResult updatePassword(@RequestBody UpdatePasswordRequest request) {
         // Check if the password is valid
-        if (ParameterChecker.isPasswordInvalid(request.getPassword())) {
-            log.error("Invalid new password: {}", request.getPassword());
-            return SaResult.error("新密码格式错误").setCode(HttpStatus.BAD_REQUEST.value());
+        if (ParameterChecker.isPasswordInvalid(request.getNewPassword())
+                || ParameterChecker.isPasswordInvalid(request.getOldPassword())) {
+            log.error("Invalid password");
+            return SaResult.error("密码格式错误").setCode(HttpStatus.BAD_REQUEST.value());
         }
 
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
+        // Check if the user exists
+        ServiceResponse<User> userResponse = userService.getUserById(userId);
+        if (!userResponse.success()) {
+            log.error(userResponse.message());
+            return SaResult.error("用户不存在").setCode(HttpStatus.UNAUTHORIZED.value());
+        }
+
+        // Check if the password matches
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        if (!passwordEncoder.matches(request.getOldPassword(), userResponse.data().getPassword())) {
+            log.error("Password doesn't match.");
+            return SaResult.error("密码错误").setCode(HttpStatus.UNAUTHORIZED.value());
+        }
+
         // Update password
-        ServiceResponse<?> response = userService.updatePassword(userId, request.getPassword());
+        ServiceResponse<?> response = userService.updatePassword(userId, request.getNewPassword());
+
+        // Open safe for 2 minutes
+        StpUtil.openSafe(120);
+
         log.info(response.message());
         return SaResult.ok("密码更新成功");
     }
