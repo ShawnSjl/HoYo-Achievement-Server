@@ -21,12 +21,12 @@ public class StartupRunner implements ApplicationRunner {
     private final UserService userService;
 
     @Value("${app.data-folder}")
-    private String data_folder;
+    private String dataFolder;
 
     @Override
     public void run(ApplicationArguments args) {
-        log.info("Start to import new data from {}", data_folder);
-        ServiceResponse<List<String>> response = migrationService.importNewData(data_folder);
+        log.info("Start to import new data from {}", dataFolder);
+        ServiceResponse<List<String>> response = migrationService.importNewData(dataFolder);
         if (response.success()) {
             for (String file : response.data()) {
                 log.info("Import data from file: {}", file);
@@ -37,6 +37,7 @@ public class StartupRunner implements ApplicationRunner {
 
         log.info("Check root user status");
         try {
+            // TODO 尝试使用log作为显示密码的地方
             ServiceResponse<?> rootStatus = userService.createRootUser("root", "Root@123");
             log.info("Root user status: {}", rootStatus.message());
         } catch (Exception e) {
