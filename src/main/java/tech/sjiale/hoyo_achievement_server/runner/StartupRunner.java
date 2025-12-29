@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+import tech.sjiale.hoyo_achievement_server.dto.MigrationResult;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.service.MigrationService;
 import tech.sjiale.hoyo_achievement_server.service.UserService;
@@ -25,14 +26,10 @@ public class StartupRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        log.info("Start to import new data from {}", dataFolder);
-        ServiceResponse<List<String>> response = migrationService.importNewData(dataFolder);
-        if (response.success()) {
-            for (String file : response.data()) {
-                log.info("Import data from file: {}", file);
-            }
-        } else {
-            log.info("Import new data failed. {}", response.message());
+        log.info("Start to import new data from local data folder");
+        ServiceResponse<List<MigrationResult>> response = migrationService.importNewData(dataFolder);
+        if (!response.success()) {
+            log.error("Import new data failed. {}", response.message());
         }
 
         log.info("Check root user status");
@@ -41,7 +38,7 @@ public class StartupRunner implements ApplicationRunner {
             ServiceResponse<?> rootStatus = userService.createRootUser("root", "Root@123");
             log.info("Root user status: {}", rootStatus.message());
         } catch (Exception e) {
-            log.warn("Create root user failed.", e);
+            log.error("Create root user failed.", e);
         }
     }
 }

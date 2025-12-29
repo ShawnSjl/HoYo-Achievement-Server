@@ -8,9 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tech.sjiale.hoyo_achievement_server.dto.MigrationFile;
-import tech.sjiale.hoyo_achievement_server.dto.MigrationOperation;
-import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
+import tech.sjiale.hoyo_achievement_server.dto.*;
 import tech.sjiale.hoyo_achievement_server.entity.DataMigration;
 import tech.sjiale.hoyo_achievement_server.mapper.DataMigrationMapper;
 
@@ -39,15 +37,15 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     private final ZzzBranchService zzzBranchService;
 
     /**
-     * Import new data from a directory or a JSON file.
+     * Import new data from a directory.
      *
-     * @param path path; could be a directory or a file
+     * @param path a directory path
      * @return ServiceResponse
      */
-    public ServiceResponse<List<String>> importNewData(String path) {
+    public ServiceResponse<List<MigrationResult>> importNewData(String path) {
         Path p = Paths.get(path);
         if (Files.isDirectory(p)) {
-            log.debug("Start to get new data in directory: {}", path);
+            log.info("Start to get new data in directory: {}", path);
             List<String> jsonFiles = findJSONInDirectory(path);
 
             // Return error if no JSON file found in the directory
@@ -56,48 +54,33 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
                 return ServiceResponse.error("No JSON file found in directory: " + path);
             }
 
+            // Return list
+            List<MigrationResult> results = new ArrayList<>();
+
             // handle JSON files
-            List<String> successFiles = new ArrayList<>();
             List<String> failedFiles = new ArrayList<>();
             for (String jsonFile : jsonFiles) {
-                if (self.handleJSONFile(jsonFile)) {
-                    successFiles.add(jsonFile);
-                } else {
+                MigrationResult result = self.handleJSONFile(jsonFile);
+                if (result.status() == ImportStatus.FAIL) {
                     failedFiles.add(jsonFile);
+                } else {
+                    results.add(result);
                 }
             }
             // Second chance for failed files
             for (String failedFile : failedFiles) {
-                if (self.handleJSONFile(failedFile)) {
-                    successFiles.add(failedFile);
-                } else {
-                    log.error("Failed to import file twice: {}", failedFile);
+                MigrationResult result = self.handleJSONFile(failedFile);
+                if (result.status() == ImportStatus.FAIL) {
+                    log.warn("Failed to import file twice: {}", failedFile);
                 }
-            }
-
-            // Return error if no JSON file imported successfully
-            if (successFiles.isEmpty()) {
-                log.warn("No JSON file imported successfully.");
-                return ServiceResponse.error("No JSON file imported successfully.");
+                results.add(result);
             }
 
             log.debug("Import new data from directory successfully.");
-            return ServiceResponse.success("Import new data successfully.", successFiles);
-        } else if (Files.isRegularFile(p) && path.endsWith(".json")) {
-            log.debug("Start to get new data in file: {}", path);
-
-            if (self.handleJSONFile(path)) {
-                List<String> successFiles = new ArrayList<>();
-                successFiles.add(path);
-                log.debug("Import new data successfully.");
-                return ServiceResponse.success("Import new data successfully.", successFiles);
-            } else {
-                log.warn("Import new data failed.");
-                return ServiceResponse.error("Import new data failed.");
-            }
+            return ServiceResponse.success("Import new data successfully.", results);
         } else {
-            log.error("Given path is not a directory or a JSON file: {}", path);
-            return ServiceResponse.error("Given path is not a directory or a JSON file: " + path);
+            log.error("Given path is not a directory: {}", path);
+            return ServiceResponse.error("Given path is not a directory: " + path);
         }
     }
 
@@ -138,10 +121,10 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
      * Handle a JSON file; This is a transaction, It will roll back and throw an exception if failed
      *
      * @param jsonFile JSON file path
-     * @return true if successfully handle the JSON file, false if the format invalid
+     * @return MigrationResult
      */
     @Transactional
-    public boolean handleJSONFile(String jsonFile) {
+    public MigrationResult handleJSONFile(String jsonFile) {
         log.debug("handle JSON file: {}", jsonFile);
 
         ObjectMapper mapper = new ObjectMapper();
@@ -152,22 +135,22 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
             byte[] jsonBytes = Files.readAllBytes(Paths.get(jsonFile));
             migrationFile = mapper.readValue(jsonBytes, MigrationFile.class);
         } catch (IOException e) {
-            log.error("Failed to read or parse JSON file: {} | error: {}", jsonFile, e.getMessage());
-            return false;
+            log.warn("Failed to read or parse JSON file: {} | error: {}", jsonFile, e.getMessage());
+            return MigrationResult.failed(jsonFile, "Failed to read or parse JSON file");
         }
 
         // Check if the JSON file is in valid format
         if (migrationFile.name() == null || migrationFile.name().isBlank()) {
-            log.error("Invalid JSON file: 'name' is missing. file={}", jsonFile);
-            return false;
+            log.warn("Invalid JSON file: 'name' is missing. file={}", jsonFile);
+            return MigrationResult.failed(jsonFile, "Invalid JSON file: 'name' is missing");
         }
         if (migrationFile.type() == null || migrationFile.type().isBlank()) {
-            log.error("Invalid JSON file: 'type' is missing. file={}", jsonFile);
-            return false;
+            log.warn("Invalid JSON file: 'type' is missing. file={}", jsonFile);
+            return MigrationResult.failed(jsonFile, "Invalid JSON file: 'type' is missing");
         }
         if (migrationFile.payload() == null) {
-            log.error("Invalid JSON file: 'payload' is missing. file={}", jsonFile);
-            return false;
+            log.warn("Invalid JSON file: 'payload' is missing. file={}", jsonFile);
+            return MigrationResult.failed(jsonFile, "Invalid JSON file: 'payload' is missing");
         }
 
         // Check if the migration file has been imported before
@@ -176,8 +159,8 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
                     .eq(DataMigration::getName, migrationFile.name())
                     .one();
             if (migration != null) {
-                log.debug("Migration file '{}' has been imported before.", migrationFile.name());
-                return true;
+                log.info("Migration file '{}' has been imported before.", migrationFile.name());
+                return MigrationResult.imported(migrationFile.name());
             }
         }
 
@@ -194,17 +177,19 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
 
                     // Save the migration record to the database
                     boolean saved = this.save(migration);
-                    if (saved) yield true;
-                    else {
+                    if (saved) {
+                        log.info("Migration file '{}' imported successfully.", migrationFile.name());
+                        yield MigrationResult.success(migrationFile.name());
+                    } else {
                         throw new RuntimeException("Failed to save migration record to database.");
                     }
                 } else {
-                    yield false;
+                    yield MigrationResult.failed(migrationFile.name(), "Failed to handle JSON file");
                 }
             }
             default -> {
-                log.error("Unknown migration type '{}' in file {}", migrationFile.type(), jsonFile);
-                yield false;
+                log.warn("Unknown migration type '{}' in file {}", migrationFile.type(), jsonFile);
+                yield MigrationResult.failed(migrationFile.name(), "Unknown migration type '" + migrationFile.type() + "'");
             }
         };
     }
@@ -235,7 +220,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
         for (MigrationOperation operation : migrationFile.payload().operations()) {
             // Check if the operation is valid
             if (operation.table() == null || operation.table().isBlank()) {
-                log.error("Invalid operation: 'table' is missing. file={}", filePath);
+                log.warn("Invalid operation: 'table' is missing. file={}", filePath);
                 return false;
             }
 
@@ -249,7 +234,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
                     return false;
 
                 default:
-                    log.error("Unknown action '{}'", operation.action());
+                    log.warn("Unknown action '{}'", operation.action());
                     return false;
             }
         }
@@ -270,7 +255,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
             case "zzz_achievement" -> zzzAchievementService.insertAchievements(data);
             case "zzz_branch" -> zzzBranchService.insertBranches(data);
             default -> {
-                log.error("Unknown table type '{}'", table);
+                log.warn("Unknown table type '{}'", table);
                 throw new IllegalArgumentException("Unknown table type '" + table + "'");
             }
         };
