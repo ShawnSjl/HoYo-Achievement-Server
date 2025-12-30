@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import tech.sjiale.hoyo_achievement_server.dto.ImportStatus;
 import tech.sjiale.hoyo_achievement_server.dto.MigrationResult;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
+import tech.sjiale.hoyo_achievement_server.entity.DataMigration;
 import tech.sjiale.hoyo_achievement_server.service.MigrationService;
 
 import java.io.File;
@@ -37,6 +38,20 @@ public class MigrationController {
     private String dataFolder;
     @Value("${app.upload-folder}")
     private String uploadFolder;
+
+    @GetMapping("/all")
+    @SaCheckLogin
+    @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
+    public SaResult getAllMigrationRecord() {
+        ServiceResponse<List<DataMigration>> response = migrationService.getAllMigrationRecord();
+        if (response.success()) {
+            log.info(response.message());
+            return SaResult.ok("获取全部数据导入记录成功").setData(response.data());
+        } else {
+            log.error(response.message());
+            return SaResult.error("获取全部数据导入记录失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        }
+    }
 
     @PutMapping("/local-data")
     @SaCheckLogin

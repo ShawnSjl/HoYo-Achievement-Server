@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,11 +31,37 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     @Lazy
     private MigrationService self;
 
+    @Value("${app.data-folder}")
+    private String dataFolder;
+
     private final ServerInfoService serverInfoService;
     private final SrAchievementService srAchievementService;
     private final SrBranchService srBranchService;
     private final ZzzAchievementService zzzAchievementService;
     private final ZzzBranchService zzzBranchService;
+
+    /**
+     * Get all data migration record; file's path are hidden
+     *
+     * @return all DataMigration
+     */
+    public ServiceResponse<List<DataMigration>> getAllMigrationRecord() {
+        List<DataMigration> rowList = this.list();
+        if (rowList == null || rowList.isEmpty()) {
+            return ServiceResponse.error("No data migration record found.");
+        }
+
+        // Hidden the real path
+        for (DataMigration record : rowList) {
+            if (record.getPath().startsWith(dataFolder)) {
+                record.setPath("DATA");
+            } else {
+                record.setPath("UPLOAD");
+            }
+        }
+
+        return ServiceResponse.success("Get all data migration record success.", rowList);
+    }
 
     /**
      * Import new data from a directory.

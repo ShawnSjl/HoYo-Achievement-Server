@@ -8,6 +8,8 @@ import tech.sjiale.hoyo_achievement_server.entity.DataMigration;
 import java.util.List;
 
 public interface MigrationService extends IService<DataMigration> {
+    ServiceResponse<List<DataMigration>> getAllMigrationRecord();
+
     ServiceResponse<List<MigrationResult>> importNewData(String path);
 
     MigrationResult handleJSONFile(String jsonFile);
