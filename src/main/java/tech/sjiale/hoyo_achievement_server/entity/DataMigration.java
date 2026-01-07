@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@TableName("data_migration")
+@TableName(value = "data_migration", autoResultMap = true)
 public class DataMigration {
     @TableId(type = IdType.AUTO)
     private Long id;

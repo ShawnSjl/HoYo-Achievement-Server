@@ -54,7 +54,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
         // Hidden the real path
         for (DataMigration record : rowList) {
             if (record.getPath().startsWith(dataFolder)) {
-                record.setPath("DATA");
+                record.setPath("LOCAL");
             } else {
                 record.setPath("UPLOAD");
             }
