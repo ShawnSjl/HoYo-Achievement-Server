@@ -53,7 +53,7 @@ public class MigrationController {
         }
     }
 
-    @PutMapping("/local-data")
+    @PostMapping("/load-local")
     @SaCheckLogin
     @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
     @SaCheckSafe
@@ -76,7 +76,7 @@ public class MigrationController {
         return SaResult.ok("导入本地数据成功").setData(resultList);
     }
 
-    @PostMapping("/upload")
+    @PostMapping("/load-upload")
     @SaCheckLogin
     @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
     @SaCheckSafe
