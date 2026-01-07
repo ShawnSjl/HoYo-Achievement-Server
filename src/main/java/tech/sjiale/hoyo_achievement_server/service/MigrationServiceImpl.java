@@ -258,6 +258,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
 
                 case "update":
                     log.warn("Not implemented yet");
+                    // TODO 实现update类型
                     return false;
 
                 default:

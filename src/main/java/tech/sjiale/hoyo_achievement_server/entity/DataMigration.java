@@ -27,4 +27,6 @@ public class DataMigration {
 
     @TableField(value = "migration_time", insertStrategy = FieldStrategy.NEVER)
     private LocalDateTime migrationTime;
+
+    // TODO 添加upload的上传者，本地数据可以写成‘-’或者‘root’
 }

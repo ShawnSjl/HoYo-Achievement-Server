@@ -191,9 +191,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * Update user role;
-     * Should only be called by admin or root;
-     * Root cannot be assigned to another role or changed to another role;
+     * Update a non-root user role to admin or normal user;
+     * Should only be called by root;
+     * Root cannot be assigned or root changed to another role;
      * Admin user should not exceed 5.
      *
      * @param id   user id

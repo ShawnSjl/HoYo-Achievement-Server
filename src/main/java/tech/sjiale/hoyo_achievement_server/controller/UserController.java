@@ -249,6 +249,7 @@ public class UserController {
     @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
     @SaCheckSafe
     public SaResult updateUserStatus(@RequestBody UpdateStatusRequest request) {
+        // TODO 禁止admin禁用另一个admin
         // Update user status
         ServiceResponse<?> response = userService.updateUserStatus(request.getUserId(), request.getStatus());
         if (!response.success()) {
@@ -261,14 +262,14 @@ public class UserController {
 
     /**
      * Update user role;
-     * Should only be called by admin or root
+     * Should only be called by root
      *
      * @param request UpdateRoleRequest with user id and role
      * @return SaResult
      */
     @PutMapping("update-role")
     @SaCheckLogin
-    @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
+    @SaCheckRole(value = {"ROOT"}, mode = SaMode.OR)
     @SaCheckSafe
     public SaResult updateUserRole(@RequestBody UpdateRoleRequest request) {
         // Update user role
