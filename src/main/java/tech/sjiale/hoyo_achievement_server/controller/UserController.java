@@ -69,7 +69,8 @@ public class UserController {
         Map<String, Object> map = new HashMap<>();
         map.put("token", StpUtil.getTokenInfo().tokenValue);
         map.put("username", userResponse.data().getUsername());
-        map.put("isAdmin", userResponse.data().getRole() != UserRole.USER);
+        map.put("isSuper", userResponse.data().getRole() != UserRole.USER);
+        map.put("isRoot", userResponse.data().getRole() == UserRole.ROOT);
         return SaResult.ok("登录成功").setData(map);
     }
 
@@ -99,9 +100,9 @@ public class UserController {
      *
      * @return SaResult
      */
-    @GetMapping("is-admin")
+    @GetMapping("is-super")
     @SaCheckLogin
-    public SaResult isAdmin() {
+    public SaResult isSuper() {
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
@@ -111,9 +112,31 @@ public class UserController {
             log.error(currentUser.message());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, currentUser.message());
         }
-        boolean isAdmin = currentUser.data().getRole() != UserRole.USER;
 
-        return SaResult.ok().setData(isAdmin);
+        boolean isSuper = currentUser.data().getRole() != UserRole.USER;
+        return SaResult.ok().setData(isSuper);
+    }
+
+    /**
+     * Check if the user is root
+     *
+     * @return SaResult
+     */
+    @GetMapping("is-root")
+    @SaCheckLogin
+    public SaResult isRoot() {
+        // Get user id from token
+        Long userId = StpUtil.getLoginIdAsLong();
+
+        // Check if the user is root
+        ServiceResponse<User> currentUser = userService.getUserById(userId);
+        if (!currentUser.success()) {
+            log.error(currentUser.message());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, currentUser.message());
+        }
+
+        boolean isRoot = currentUser.data().getRole() == UserRole.ROOT;
+        return SaResult.ok().setData(isRoot);
     }
 
     /**
