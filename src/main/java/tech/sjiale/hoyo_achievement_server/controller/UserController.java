@@ -239,7 +239,8 @@ public class UserController {
 
     /**
      * Update user status;
-     * Should only be called by admin or root
+     * Should only be called by admin or root;
+     * Admin cannot change status of another admin.
      *
      * @param request UpdateStatusRequest with user id and status
      * @return SaResult
@@ -249,7 +250,29 @@ public class UserController {
     @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
     @SaCheckSafe
     public SaResult updateUserStatus(@RequestBody UpdateStatusRequest request) {
-        // TODO 禁止admin禁用另一个admin
+        // Get user id from token
+        Long userId = StpUtil.getLoginIdAsLong();
+
+        // Get current user
+        ServiceResponse<User> currentUserResponse = userService.getUserById(userId);
+        if (!currentUserResponse.success()) {
+            log.error(currentUserResponse.message());
+            return SaResult.error("用户不存在").setCode(HttpStatus.UNAUTHORIZED.value());
+        }
+
+        // Get target user
+        ServiceResponse<User> targetUserResponse = userService.getUserById(request.getUserId());
+        if (!targetUserResponse.success()) {
+            log.error(currentUserResponse.message());
+            return SaResult.error("用户不存在").setCode(HttpStatus.UNAUTHORIZED.value());
+        }
+
+        // Admin cannot change status of another admin
+        if (currentUserResponse.data().getRole() == UserRole.ADMIN && targetUserResponse.data().getRole() == UserRole.ADMIN) {
+            log.warn("Admin user cannot change status of another admin.");
+            return SaResult.error("权限错误").setCode(HttpStatus.UNAUTHORIZED.value());
+        }
+
         // Update user status
         ServiceResponse<?> response = userService.updateUserStatus(request.getUserId(), request.getStatus());
         if (!response.success()) {

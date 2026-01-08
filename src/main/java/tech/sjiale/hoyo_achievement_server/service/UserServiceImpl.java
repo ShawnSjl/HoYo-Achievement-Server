@@ -160,7 +160,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * Update user status, cannot disable an admin or root account; should only be called by admin and root
+     * Update user status, cannot disable a root account; should only be called by admin and root
      *
      * @param id     user id
      * @param status new status
@@ -174,9 +174,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return ServiceResponse.error("Target user doesn't exist, update status failed: " + id);
         }
 
-        // Check if the user is admin or root
-        if (response.data().getRole() == UserRole.ADMIN || response.data().getRole() == UserRole.ROOT) {
-            return ServiceResponse.error("Admin and root user cannot be disabled: " + id);
+        // Check if the user is root, root cannot be disabled
+        if (response.data().getRole() == UserRole.ROOT) {
+            return ServiceResponse.error("Root user cannot be disabled: " + id);
         }
 
         // Update user status

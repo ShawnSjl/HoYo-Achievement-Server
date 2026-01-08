@@ -78,7 +78,7 @@ public class MigrationController {
 
     @PostMapping("/load-upload")
     @SaCheckLogin
-    @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
+    @SaCheckRole(value = {"ROOT"}, mode = SaMode.OR)
     @SaCheckSafe
     public SaResult uploadFiles(@RequestParam("file") MultipartFile[] files) {
         // Check if files are uploaded
