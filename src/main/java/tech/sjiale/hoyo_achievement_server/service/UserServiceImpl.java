@@ -268,6 +268,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
+     * Check if there is a root user
+     *
+     * @return ServiceResponse
+     */
+    public ServiceResponse<Boolean> hasRootUser() {
+        // Check if the root already exists
+        Long rootCount = this.lambdaQuery().eq(User::getRole, UserRole.ROOT).count();
+        if (rootCount != 0) {
+            return ServiceResponse.success("Root already exists.", true);
+        } else {
+            return ServiceResponse.success("Root doesn't exist.", false);
+        }
+    }
+
+    /**
      * Create a root user; should only be called by the system initialization script
      *
      * @param username username
@@ -279,7 +294,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // Check if the root already exists
         Long rootCount = this.lambdaQuery().eq(User::getRole, UserRole.ROOT).count();
         if (rootCount != 0) {
-            return ServiceResponse.success("Root already exists.");
+            return ServiceResponse.error("Root already exists.");
         }
 
         // Check if the username already exists
@@ -302,10 +317,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // Save the new root user
         boolean success = this.save(root);
         if (success) {
-            log.debug("Create root user {} successfully.", username);
-            return ServiceResponse.success("Create root user successfully.", root);
+            log.debug("Create root user successfully.");
+            return ServiceResponse.success("Create root user successfully.");
         } else {
-            log.error("Create root user {} failed.", username);
+            log.error("Create root user failed.");
             throw new RuntimeException("Create root user failed.");
         }
     }

@@ -13,8 +13,22 @@ public class HoYoAchievementServerApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(HoYoAchievementServerApplication.class, args);
-        log.info("HoYo Achievement Server start success!");
         log.info("Sa-Token config: {}", SaManager.getConfig());
+        log.info("HoYo Achievement Server start success!");
+        printAsciiArt();
     }
 
+    private static void printAsciiArt() {
+        String art = """
+                
+                  _    _   __     __                  _     _                                     _  \s
+                 | |  | |  \\ \\   / /        /\\       | |   (_)                                   | | \s
+                 | |__| | __\\ \\_/ /__      /  \\   ___| |__  _  _____   _____ _ __ ___   ___ _ __ | |_\s
+                 |  __  |/ _ \\   / _ \\    / /\\ \\ / __| '_ \\| |/ _ \\ \\ / / _ \\ '_ ` _ \\ / _ \\ '_ \\| __|
+                 | |  | | (_) | | (_) |  / ____ \\ (__| | | | |  __/\\ V /  __/ | | | | |  __/ | | | |_\s
+                 |_|  |_|\\___/|_|\\___/  /_/    \\_\\___|_| |_|_|\\___| \\_/ \\___|_| |_| |_|\\___|_| |_|\\__|
+                
+                """;
+        log.info(art);
+    }
 }

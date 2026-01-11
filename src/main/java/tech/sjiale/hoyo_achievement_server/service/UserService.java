@@ -28,5 +28,8 @@ public interface UserService extends IService<User> {
 
     ServiceResponse<?> deleteUser(Long id);
 
+    // Startup Use
+    ServiceResponse<Boolean> hasRootUser();
+
     ServiceResponse<?> createRootUser(String username, String password);
 }
