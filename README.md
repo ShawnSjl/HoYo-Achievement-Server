@@ -103,8 +103,7 @@ java -jar HoYo_Achievement_Server.jar \
     </root>
 </configuration>
 ```
-
-再次启动程序，Spring Boot 会自动检测并应用该配置。日志将生成在 ./logs 目录下。
+在启动前，添加参数`--logging.config=./logback-spring.xml`，Spring Boot 会检测并应用该配置。日志将生成在 ./logs 目录下。
 
 ## 🛠️ 相关仓库
 1. 前端：[HoYo-Achievement-Web](https://github.com/ShawnSjl/HoYo-Achievement-Web)
