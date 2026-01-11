@@ -16,4 +16,6 @@ public interface ServerInfoService extends IService<ServerInfo> {
     ServiceResponse<?> insertServerInfoBatch(List<Map<String, Object>> serverInfoMapList);
 
     ServiceResponse<?> updateServerInfoBatch(List<Map<String, Object>> serverInfoMapList);
+
+    ServiceResponse<?> deleteServerInfoBatch(List<Map<String, Object>> serverInfoMapList);
 }

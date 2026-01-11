@@ -63,7 +63,7 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
 
             // Check if all fields are filled
             if (BeanUtil.hasNullField(serverInfo)) {
-                log.warn("Invalid server info: {} for insert", serverInfoMap);
+                log.warn("Invalid server info for insert: {}", serverInfoMap);
                 throw new IllegalArgumentException("Invalid server info for insert.");
             }
 
@@ -93,8 +93,8 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
             // Get record id from the map
             Object recordIdObj = serverInfoMap.get("record_id");
             if (recordIdObj == null) {
-                log.warn("Invalid server info: missing 'record_id' for lookup.");
-                throw new IllegalArgumentException("Invalid server info: missing 'record_id' for lookup.");
+                log.warn("Invalid server info for update: missing 'record_id' for lookup.");
+                throw new IllegalArgumentException("Invalid server info for update: missing 'record_id' for lookup.");
             }
             Long oldId = Long.valueOf(recordIdObj.toString());
 
@@ -137,5 +137,40 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
 
         log.debug("Update server info batch successfully.");
         return ServiceResponse.success("Update server info batch successfully.");
+    }
+
+    /**
+     * Delete server info batch; should only be called by migration service
+     *
+     * @param serverInfoMapList List of server info map
+     * @return ServiceResponse
+     */
+    @Transactional
+    public ServiceResponse<?> deleteServerInfoBatch(List<Map<String, Object>> serverInfoMapList) {
+        List<Long> ids = new ArrayList<>();
+
+        for (Map<String, Object> serverInfoMap : serverInfoMapList) {
+            Object recordIdObj = serverInfoMap.get("record_id");
+            if (recordIdObj == null) {
+                log.warn("Invalid server info for delete: missing 'record_id' for lookup.");
+                throw new IllegalArgumentException("Invalid server info for delete: missing 'record_id' for lookup.");
+            }
+            ids.add(Long.valueOf(recordIdObj.toString()));
+        }
+
+        if (ids.isEmpty()) {
+            log.warn("No server info found for delete.");
+            throw new IllegalArgumentException("No server info found for delete.");
+        }
+
+        // Delete records
+        boolean success = this.removeByIds(ids);
+        if (success) {
+            log.debug("Delete server info batch successfully.");
+            return ServiceResponse.success("Delete server info batch successfully.");
+        } else {
+            log.warn("Delete server info batch failed.");
+            throw new RuntimeException("Delete server info batch failed.");
+        }
     }
 }

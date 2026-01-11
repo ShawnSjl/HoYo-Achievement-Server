@@ -81,8 +81,8 @@ public class ZzzBranchServiceImpl extends ServiceImpl<ZzzBranchMapper, ZzzBranch
 
             // Check if all fields are filled
             if (BeanUtil.hasNullField(zzzBranch)) {
-                log.warn("Invalid ZZZ branch data: {}", branchMap);
-                throw new IllegalArgumentException("Invalid ZZZ branch data.");
+                log.warn("Invalid ZZZ branch for insert: {}", branchMap);
+                throw new IllegalArgumentException("Invalid ZZZ branch for insert.");
             }
 
             inserts.add(zzzBranch);
@@ -155,5 +155,40 @@ public class ZzzBranchServiceImpl extends ServiceImpl<ZzzBranchMapper, ZzzBranch
 
         log.debug("Update ZZZ branches batch successfully.");
         return ServiceResponse.success("Update ZZZ branches batch successfully.");
+    }
+
+    /**
+     * Delete ZZZ branches; should only be called by migration service
+     *
+     * @param branchMapList List of branch data
+     * @return ServiceResponse
+     */
+    @Transactional
+    public ServiceResponse<?> deleteBranchBatch(List<Map<String, Object>> branchMapList) {
+        List<Integer> branchIds = new ArrayList<>();
+
+        for (Map<String, Object> branchMap : branchMapList) {
+            Object recordIdObj = branchMap.get("record_id");
+            if (recordIdObj == null) {
+                log.warn("Invalid ZZZ branch for delete: missing 'record_id' for lookup.");
+                throw new IllegalArgumentException("Invalid ZZZ branch for delete: missing 'record_id' for lookup.");
+            }
+            branchIds.add(Integer.valueOf(recordIdObj.toString()));
+        }
+
+        if (branchIds.isEmpty()) {
+            log.warn("No ZZZ branch found for delete.");
+            throw new IllegalArgumentException("No ZZZ branch found for delete.");
+        }
+
+        // Delete records
+        boolean success = this.removeByIds(branchIds);
+        if (success) {
+            log.debug("Delete ZZZ branch batch successfully.");
+            return ServiceResponse.success("Delete ZZZ branch batch successfully.");
+        } else {
+            log.warn("Delete ZZZ branch batch failed.");
+            throw new RuntimeException("Delete ZZZ branch batch failed.");
+        }
     }
 }

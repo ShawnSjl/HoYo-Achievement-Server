@@ -33,8 +33,8 @@ public class ZzzAchievementServiceImpl extends ServiceImpl<ZzzAchievementMapper,
             return ServiceResponse.error("No ZZZ achievement found with id: " + achievementId);
         }
 
-        log.debug("Get SR achievement by id successfully.");
-        return ServiceResponse.success("Get SR achievement by id successfully.", achievement);
+        log.debug("Get ZZZ achievement by id successfully.");
+        return ServiceResponse.success("Get ZZZ achievement by id successfully.", achievement);
     }
 
     /**
@@ -61,8 +61,8 @@ public class ZzzAchievementServiceImpl extends ServiceImpl<ZzzAchievementMapper,
 
             // Check if all fields are filled
             if (BeanUtil.hasNullField(zzzAchievement)) {
-                log.warn("Invalid ZZZ achievement data: {}", achievementMap);
-                return ServiceResponse.error("Invalid ZZZ achievement data.");
+                log.warn("Invalid ZZZ achievement for insert: {}", achievementMap);
+                return ServiceResponse.error("Invalid ZZZ achievement for insert.");
             }
 
             inserts.add(zzzAchievement);
@@ -91,8 +91,8 @@ public class ZzzAchievementServiceImpl extends ServiceImpl<ZzzAchievementMapper,
             // Get record id from the map
             Object recordIdObj = achievementMap.get("record_id");
             if (recordIdObj == null) {
-                log.warn("Invalid ZZZ achievement data: missing 'record_id' for lookup.");
-                return ServiceResponse.error("Invalid ZZZ achievement data: missing 'record_id' for lookup.");
+                log.warn("Invalid ZZZ achievement for update: missing 'record_id' for lookup.");
+                return ServiceResponse.error("Invalid ZZZ achievement for update: missing 'record_id' for lookup.");
             }
             Integer oldId = Integer.valueOf(recordIdObj.toString());
 
@@ -135,5 +135,40 @@ public class ZzzAchievementServiceImpl extends ServiceImpl<ZzzAchievementMapper,
 
         log.debug("Update ZZZ achievements batch successfully.");
         return ServiceResponse.success("Update ZZZ achievements batch successfully.");
+    }
+
+    /**
+     * Delete ZZZ achievements; should only be called by migration service
+     *
+     * @param achievementMapList List of achievement data
+     * @return ServiceResponse
+     */
+    @Transactional
+    public ServiceResponse<?> deleteAchievementBatch(List<Map<String, Object>> achievementMapList) {
+        List<Integer> achievementIds = new ArrayList<>();
+
+        for (Map<String, Object> achievementMap : achievementMapList) {
+            Object recordIdObj = achievementMap.get("record_id");
+            if (recordIdObj == null) {
+                log.warn("Invalid ZZZ achievement for delete: missing 'record_id' for lookup.");
+                throw new IllegalArgumentException("Invalid ZZZ achievement for delete: missing 'record_id' for lookup.");
+            }
+            achievementIds.add(Integer.valueOf(recordIdObj.toString()));
+        }
+
+        if (achievementIds.isEmpty()) {
+            log.warn("No ZZZ achievement found for delete.");
+            throw new IllegalArgumentException("No ZZZ achievement found for delete.");
+        }
+
+        // Delete records
+        boolean success = this.removeByIds(achievementIds);
+        if (success) {
+            log.debug("Delete ZZZ achievement batch successfully.");
+            return ServiceResponse.success("Delete ZZZ achievement batch successfully.");
+        } else {
+            log.warn("Delete ZZZ achievement batch failed.");
+            throw new RuntimeException("Delete ZZZ achievement batch failed.");
+        }
     }
 }

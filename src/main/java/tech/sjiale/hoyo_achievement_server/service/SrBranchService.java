@@ -16,4 +16,6 @@ public interface SrBranchService extends IService<SrBranch> {
     ServiceResponse<?> insertBranchBatch(List<Map<String, Object>> branchMapList);
 
     ServiceResponse<?> updateBranchBatch(List<Map<String, Object>> branchMapList);
+
+    ServiceResponse<?> deleteBranchBatch(List<Map<String, Object>> branchMapList);
 }

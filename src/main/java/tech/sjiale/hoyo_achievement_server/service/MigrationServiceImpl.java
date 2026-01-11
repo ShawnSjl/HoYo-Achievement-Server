@@ -260,6 +260,10 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
                     handleUpdate(operation.table(), operation.values());
                     break;
 
+                case "delete":
+                    handleDelete(operation.table(), operation.values());
+                    break;
+
                 default:
                     log.warn("Unknown action '{}'", operation.action());
                     return false;
@@ -318,4 +322,28 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
         }
     }
 
+    /**
+     * Handle delete operation; It will throw an exception if failed
+     *
+     * @param table table name
+     * @param data  delete data
+     */
+    private void handleDelete(String table, List<Map<String, Object>> data) {
+        ServiceResponse<?> res = switch (table) {
+            case "server_info" -> serverInfoService.deleteServerInfoBatch(data);
+            case "sr_achievement" -> srAchievementService.deleteAchievementBatch(data);
+            case "sr_branch" -> srBranchService.deleteBranchBatch(data);
+            case "zzz_achievement" -> zzzAchievementService.deleteAchievementBatch(data);
+            case "zzz_branch" -> zzzBranchService.deleteBranchBatch(data);
+            default -> {
+                log.warn("Unknown table type '{}' for delete", table);
+                throw new IllegalArgumentException("Unknown table type '" + table + "' for delete");
+            }
+        };
+
+        // If not success, throw an exception
+        if (!res.success()) {
+            throw new RuntimeException("Delete failed for table: " + table);
+        }
+    }
 }

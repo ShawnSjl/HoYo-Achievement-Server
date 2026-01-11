@@ -81,8 +81,8 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
 
             // Check if all fields are filled
             if (BeanUtil.hasNullField(srBranch)) {
-                log.warn("Invalid SR branch data: {}", branchMap);
-                throw new IllegalArgumentException("Invalid SR branch data.");
+                log.warn("Invalid SR branch for insert: {}", branchMap);
+                throw new IllegalArgumentException("Invalid SR branch for insert.");
             }
 
             inserts.add(srBranch);
@@ -111,8 +111,8 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
             // Get record id from the map
             Object recordIdObj = branchMap.get("record_id");
             if (recordIdObj == null) {
-                log.warn("Invalid SR branch data: missing 'record_id' for lookup.");
-                throw new IllegalArgumentException("Invalid SR branch data: missing 'record_id' for lookup.");
+                log.warn("Invalid SR branch for update: missing 'record_id' for lookup.");
+                throw new IllegalArgumentException("Invalid SR branch for update: missing 'record_id' for lookup.");
             }
             Integer oldId = Integer.valueOf(recordIdObj.toString());
 
@@ -155,5 +155,40 @@ public class SrBranchServiceImpl extends ServiceImpl<SrBranchMapper, SrBranch> i
 
         log.debug("Update SR branches batch successfully.");
         return ServiceResponse.success("Update SR branches batch successfully.");
+    }
+
+    /**
+     * Delete SR branches; should only be called by migration service
+     *
+     * @param branchMapList List of branch data
+     * @return ServiceResponse
+     */
+    @Transactional
+    public ServiceResponse<?> deleteBranchBatch(List<Map<String, Object>> branchMapList) {
+        List<Integer> branchIds = new ArrayList<>();
+
+        for (Map<String, Object> branchMap : branchMapList) {
+            Object recordIdObj = branchMap.get("record_id");
+            if (recordIdObj == null) {
+                log.warn("Invalid SR branch for delete: missing 'record_id' for lookup.");
+                throw new IllegalArgumentException("Invalid SR branch for delete: missing 'record_id' for lookup.");
+            }
+            branchIds.add(Integer.valueOf(recordIdObj.toString()));
+        }
+
+        if (branchIds.isEmpty()) {
+            log.warn("No SR branch found for delete.");
+            throw new IllegalArgumentException("No SR branch found for delete.");
+        }
+
+        // Delete records
+        boolean success = this.removeByIds(branchIds);
+        if (success) {
+            log.debug("Delete SR branch batch successfully.");
+            return ServiceResponse.success("Delete SR branch batch successfully.");
+        } else {
+            log.warn("Delete SR branch batch failed.");
+            throw new RuntimeException("Delete SR branch batch failed.");
+        }
     }
 }

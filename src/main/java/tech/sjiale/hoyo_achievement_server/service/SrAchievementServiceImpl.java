@@ -61,8 +61,8 @@ public class SrAchievementServiceImpl extends ServiceImpl<SrAchievementMapper, S
 
             // Check if all fields are filled
             if (BeanUtil.hasNullField(srAchievement)) {
-                log.warn("Invalid SR achievement data: {}", achievementMap);
-                throw new IllegalArgumentException("Invalid SR achievement data.");
+                log.warn("Invalid SR achievement for insert: {}", achievementMap);
+                throw new IllegalArgumentException("Invalid SR achievement for insert.");
             }
 
             inserts.add(srAchievement);
@@ -91,8 +91,8 @@ public class SrAchievementServiceImpl extends ServiceImpl<SrAchievementMapper, S
             // Get record id from the map
             Object recordIdObj = achievementMap.get("record_id");
             if (recordIdObj == null) {
-                log.warn("Invalid SR achievement: missing 'record_id' for lookup.");
-                throw new IllegalArgumentException("Invalid SR achievement: missing 'record_id' for lookup.");
+                log.warn("Invalid SR achievement for update: missing 'record_id' for lookup.");
+                throw new IllegalArgumentException("Invalid SR achievement for update: missing 'record_id' for lookup.");
             }
             Integer oldId = Integer.valueOf(recordIdObj.toString());
 
@@ -135,5 +135,40 @@ public class SrAchievementServiceImpl extends ServiceImpl<SrAchievementMapper, S
 
         log.debug("Update SR achievements batch successfully.");
         return ServiceResponse.success("Update SR achievements batch successfully.");
+    }
+
+    /**
+     * Delete SR achievements; should only be called by migration service
+     *
+     * @param achievementMapList List of achievement data
+     * @return ServiceResponse
+     */
+    @Transactional
+    public ServiceResponse<?> deleteAchievementBatch(List<Map<String, Object>> achievementMapList) {
+        List<Integer> achievementIds = new ArrayList<>();
+
+        for (Map<String, Object> achievementMap : achievementMapList) {
+            Object recordIdObj = achievementMap.get("record_id");
+            if (recordIdObj == null) {
+                log.warn("Invalid SR achievement for delete: missing 'record_id' for lookup.");
+                throw new IllegalArgumentException("Invalid SR achievement for delete: missing 'record_id' for lookup.");
+            }
+            achievementIds.add(Integer.valueOf(recordIdObj.toString()));
+        }
+
+        if (achievementIds.isEmpty()) {
+            log.warn("No SR achievement found for delete.");
+            throw new IllegalArgumentException("No SR achievement found for delete.");
+        }
+
+        // Delete records
+        boolean success = this.removeByIds(achievementIds);
+        if (success) {
+            log.debug("Delete SR achievement batch successfully.");
+            return ServiceResponse.success("Delete SR achievement batch successfully.");
+        } else {
+            log.warn("Delete SR achievement batch failed.");
+            throw new RuntimeException("Delete SR achievement batch failed.");
+        }
     }
 }
