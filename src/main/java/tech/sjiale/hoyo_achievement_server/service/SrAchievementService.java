@@ -12,6 +12,8 @@ public interface SrAchievementService extends IService<SrAchievement> {
 
     ServiceResponse<List<SrAchievement>> getAllAchievements();
 
-    // Import use
-    ServiceResponse<?> insertAchievements(List<Map<String, Object>> achievementMapList);
+    // Data migration use
+    ServiceResponse<?> insertAchievementBatch(List<Map<String, Object>> achievementMapList);
+
+    ServiceResponse<?> updateAchievementBatch(List<Map<String, Object>> achievementMapList);
 }

@@ -257,9 +257,8 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
                     break;
 
                 case "update":
-                    log.warn("Not implemented yet");
-                    // TODO 实现update类型
-                    return false;
+                    handleUpdate(operation.table(), operation.values());
+                    break;
 
                 default:
                     log.warn("Unknown action '{}'", operation.action());
@@ -278,19 +277,44 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     private void handleInsert(String table, List<Map<String, Object>> data) {
         ServiceResponse<?> res = switch (table) {
             case "server_info" -> serverInfoService.insertServerInfoBatch(data);
-            case "sr_achievement" -> srAchievementService.insertAchievements(data);
-            case "sr_branch" -> srBranchService.insertBranches(data);
-            case "zzz_achievement" -> zzzAchievementService.insertAchievements(data);
-            case "zzz_branch" -> zzzBranchService.insertBranches(data);
+            case "sr_achievement" -> srAchievementService.insertAchievementBatch(data);
+            case "sr_branch" -> srBranchService.insertBranchBatch(data);
+            case "zzz_achievement" -> zzzAchievementService.insertAchievementBatch(data);
+            case "zzz_branch" -> zzzBranchService.insertBranchBatch(data);
             default -> {
-                log.warn("Unknown table type '{}'", table);
-                throw new IllegalArgumentException("Unknown table type '" + table + "'");
+                log.warn("Unknown table type '{}' for insert", table);
+                throw new IllegalArgumentException("Unknown table type '" + table + "' for insert");
             }
         };
 
         // If not success, throw an exception
         if (!res.success()) {
             throw new RuntimeException("Insert failed for table: " + table);
+        }
+    }
+
+    /**
+     * Handle update operation; It will throw an exception if failed
+     *
+     * @param table table name
+     * @param data  update data
+     */
+    private void handleUpdate(String table, List<Map<String, Object>> data) {
+        ServiceResponse<?> res = switch (table) {
+            case "server_info" -> serverInfoService.updateServerInfoBatch(data);
+            case "sr_achievement" -> srAchievementService.updateAchievementBatch(data);
+            case "sr_branch" -> srBranchService.updateBranchBatch(data);
+            case "zzz_achievement" -> zzzAchievementService.updateAchievementBatch(data);
+            case "zzz_branch" -> zzzBranchService.updateBranchBatch(data);
+            default -> {
+                log.warn("Unknown table type '{}' for update", table);
+                throw new IllegalArgumentException("Unknown table type '" + table + "' for update");
+            }
+        };
+
+        // If not success, throw an exception
+        if (!res.success()) {
+            throw new RuntimeException("Update failed for table: " + table);
         }
     }
 

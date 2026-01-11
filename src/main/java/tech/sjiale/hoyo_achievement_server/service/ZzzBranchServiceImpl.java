@@ -1,5 +1,8 @@
 package tech.sjiale.hoyo_achievement_server.service;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -8,6 +11,7 @@ import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.ZzzBranch;
 import tech.sjiale.hoyo_achievement_server.mapper.ZzzBranchMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -69,22 +73,87 @@ public class ZzzBranchServiceImpl extends ServiceImpl<ZzzBranchMapper, ZzzBranch
      * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> insertBranches(List<Map<String, Object>> branchMapList) {
-        for (Map<String, Object> branchMap : branchMapList) {
-            Integer achievementId = (Integer) branchMap.get("achievement_id");
-            Integer branchId = (Integer) branchMap.get("branch_id");
+    public ServiceResponse<?> insertBranchBatch(List<Map<String, Object>> branchMapList) {
+        List<ZzzBranch> inserts = new ArrayList<>();
 
-            if (achievementId == null || branchId == null) {
-                log.error("Invalid branch data: achievement_id={}, branch_id={}", achievementId, branchId);
-                throw new IllegalArgumentException("Invalid branch data.");
+        for (Map<String, Object> branchMap : branchMapList) {
+            ZzzBranch zzzBranch = BeanUtil.toBean(branchMap, ZzzBranch.class);
+
+            // Check if all fields are filled
+            if (BeanUtil.hasNullField(zzzBranch)) {
+                log.warn("Invalid ZZZ branch data: {}", branchMap);
+                throw new IllegalArgumentException("Invalid ZZZ branch data.");
             }
 
-            ZzzBranch branch = new ZzzBranch();
-            branch.setAchievementId(achievementId);
-            branch.setBranchId(branchId);
-            this.save(branch);
+            inserts.add(zzzBranch);
         }
-        log.debug("Insert ZZZ branches successfully.");
-        return ServiceResponse.success("Insert ZZZ branches successfully.");
+
+        // Save inserts results to the database
+        if (!inserts.isEmpty()) {
+            this.saveBatch(inserts);
+        }
+
+        log.debug("Insert ZZZ branch batch successfully.");
+        return ServiceResponse.success("Insert ZZZ branch batch successfully.");
+    }
+
+    /**
+     * Update ZZZ branches; should only be called by migration service
+     *
+     * @param branchMapList List of branch data
+     * @return ServiceResponse
+     */
+    @Transactional
+    public ServiceResponse<?> updateBranchBatch(List<Map<String, Object>> branchMapList) {
+        List<ZzzBranch> updates = new ArrayList<>();
+
+        for (Map<String, Object> branchMap : branchMapList) {
+            // Get record id from the map
+            Object recordIdObj = branchMap.get("record_id");
+            if (recordIdObj == null) {
+                log.warn("Invalid ZZZ branch data: missing 'record_id' for lookup.");
+                throw new IllegalArgumentException("Invalid ZZZ branch data: missing 'record_id' for lookup.");
+            }
+            Integer oldId = Integer.valueOf(recordIdObj.toString());
+
+            // Find the target branch
+            ZzzBranch targetBranch = this.getById(oldId);
+            if (targetBranch == null) {
+                log.warn("No ZZZ branch found with id: {}", oldId);
+                throw new IllegalArgumentException("No ZZZ branch found with id: " + oldId);
+            }
+
+            // Update target branch
+            BeanUtil.fillBeanWithMap(branchMap, targetBranch,
+                    CopyOptions.create()
+                            .setIgnoreNullValue(true)
+                            .setIgnoreCase(true)
+                            .setIgnoreError(true)
+            );
+
+            // Handle the situation that id is changed
+            Integer newId = targetBranch.getAchievementId();
+            if (!oldId.equals(newId)) {
+                UpdateWrapper<ZzzBranch> updateWrapper = new UpdateWrapper<>();
+                updateWrapper.eq("achievement_id", oldId);
+                updateWrapper.set("achievement_id", newId);
+                boolean success = this.update(targetBranch, updateWrapper);
+                if (!success) {
+                    log.warn("Failed to update ZZZ branch for id: {}", oldId);
+                    throw new RuntimeException("Failed to update ZZZ branch for id: " + oldId);
+                }
+            } else {
+                // Save result to list
+                updates.add(targetBranch);
+            }
+        }
+
+        // Save updates results to the database
+        if (!updates.isEmpty()) {
+            this.updateBatchById(updates);
+        }
+
+        log.debug("Update ZZZ branches batch successfully.");
+        return ServiceResponse.success("Update ZZZ branches batch successfully.");
     }
 }

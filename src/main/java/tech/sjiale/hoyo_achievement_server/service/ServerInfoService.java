@@ -12,6 +12,8 @@ public interface ServerInfoService extends IService<ServerInfo> {
 
     ServiceResponse<ServerInfo> getLatestServerInfo();
 
-    // Import use
+    // Data migration use
     ServiceResponse<?> insertServerInfoBatch(List<Map<String, Object>> serverInfoMapList);
+
+    ServiceResponse<?> updateServerInfoBatch(List<Map<String, Object>> serverInfoMapList);
 }

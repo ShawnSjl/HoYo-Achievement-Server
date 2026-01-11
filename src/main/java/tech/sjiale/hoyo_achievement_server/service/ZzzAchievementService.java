@@ -12,6 +12,8 @@ public interface ZzzAchievementService extends IService<ZzzAchievement> {
 
     ServiceResponse<List<ZzzAchievement>> getAllAchievements();
 
-    // Import use
-    ServiceResponse<?> insertAchievements(List<Map<String, Object>> achievementMapList);
+    // Data migration use
+    ServiceResponse<?> insertAchievementBatch(List<Map<String, Object>> achievementMapList);
+
+    ServiceResponse<?> updateAchievementBatch(List<Map<String, Object>> achievementMapList);
 }

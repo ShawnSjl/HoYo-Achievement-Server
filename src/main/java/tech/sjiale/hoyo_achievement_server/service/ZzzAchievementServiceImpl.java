@@ -1,5 +1,8 @@
 package tech.sjiale.hoyo_achievement_server.service;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -8,6 +11,7 @@ import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.ZzzAchievement;
 import tech.sjiale.hoyo_achievement_server.mapper.ZzzAchievementMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -49,31 +53,87 @@ public class ZzzAchievementServiceImpl extends ServiceImpl<ZzzAchievementMapper,
      * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> insertAchievements(List<Map<String, Object>> achievementMapList) {
-        for (Map<String, Object> achievementMap : achievementMapList) {
-            Integer achievementId = (Integer) achievementMap.get("achievement_id");
-            Integer classId = (Integer) achievementMap.get("class_id");
-            String name = achievementMap.get("name").toString();
-            String description = achievementMap.get("description").toString();
-            Integer rewardLevel = (Integer) achievementMap.get("reward_level");
-            String gameVersion = achievementMap.get("game_version").toString();
+    public ServiceResponse<?> insertAchievementBatch(List<Map<String, Object>> achievementMapList) {
+        List<ZzzAchievement> inserts = new ArrayList<>();
 
-            if (achievementId == null || classId == null || name == null || description == null || rewardLevel == null || gameVersion == null) {
-                log.error("Invalid achievement data: achievement_id={}, class={}, name={}, description={}, " +
-                        "reward_level={}, game_version={}", achievementId, classId, name, description, rewardLevel, gameVersion);
-                throw new IllegalArgumentException("Invalid ZZZ achievement data.");
+        for (Map<String, Object> achievementMap : achievementMapList) {
+            ZzzAchievement zzzAchievement = BeanUtil.toBean(achievementMap, ZzzAchievement.class);
+
+            // Check if all fields are filled
+            if (BeanUtil.hasNullField(zzzAchievement)) {
+                log.warn("Invalid ZZZ achievement data: {}", achievementMap);
+                return ServiceResponse.error("Invalid ZZZ achievement data.");
             }
 
-            ZzzAchievement achievement = new ZzzAchievement();
-            achievement.setAchievementId(achievementId);
-            achievement.setClassId(classId);
-            achievement.setName(name);
-            achievement.setDescription(description);
-            achievement.setRewardLevel(rewardLevel);
-            achievement.setGameVersion(gameVersion);
-            this.save(achievement);
+            inserts.add(zzzAchievement);
         }
-        log.debug("Insert ZZZ achievements successfully.");
-        return ServiceResponse.success("Insert ZZZ achievements successfully.");
+
+        // Save inserts results to the database
+        if (!inserts.isEmpty()) {
+            this.saveBatch(inserts);
+        }
+
+        log.debug("Insert ZZZ achievement batch successfully.");
+        return ServiceResponse.success("Insert ZZZ achievement batch successfully.");
+    }
+
+    /**
+     * Update ZZZ achievements; should only be called by migration service
+     *
+     * @param achievementMapList List of achievement data
+     * @return ServiceResponse
+     */
+    @Transactional
+    public ServiceResponse<?> updateAchievementBatch(List<Map<String, Object>> achievementMapList) {
+        List<ZzzAchievement> updates = new ArrayList<>();
+
+        for (Map<String, Object> achievementMap : achievementMapList) {
+            // Get record id from the map
+            Object recordIdObj = achievementMap.get("record_id");
+            if (recordIdObj == null) {
+                log.warn("Invalid ZZZ achievement data: missing 'record_id' for lookup.");
+                return ServiceResponse.error("Invalid ZZZ achievement data: missing 'record_id' for lookup.");
+            }
+            Integer oldId = Integer.valueOf(recordIdObj.toString());
+
+            // Find target achievement
+            ZzzAchievement targetAchievement = this.getById(oldId);
+            if (targetAchievement == null) {
+                log.warn("No ZZZ achievement found with id: {}", oldId);
+                return ServiceResponse.error("No ZZZ achievement found with id: " + oldId);
+            }
+
+            // Update target achievement
+            BeanUtil.fillBeanWithMap(achievementMap, targetAchievement,
+                    CopyOptions.create()
+                            .setIgnoreNullValue(true)
+                            .setIgnoreCase(true)
+                            .setIgnoreError(true)
+            );
+
+            // Handle the situation that id is changed
+            Integer newId = targetAchievement.getAchievementId();
+            if (!oldId.equals(newId)) {
+                UpdateWrapper<ZzzAchievement> updateWrapper = new UpdateWrapper<>();
+                updateWrapper.eq("achievement_id", oldId);
+                updateWrapper.set("achievement_id", newId);
+                boolean success = this.update(targetAchievement, updateWrapper);
+                if (!success) {
+                    log.warn("Failed to update ZZZ achievement for id: {}", oldId);
+                    throw new RuntimeException("Failed to update ZZZ achievement for id: " + oldId);
+                }
+            } else {
+                // Save result to list
+                updates.add(targetAchievement);
+            }
+        }
+
+        // Save updates results to the database
+        if (!updates.isEmpty()) {
+            this.updateBatchById(updates);
+        }
+
+        log.debug("Update ZZZ achievements batch successfully.");
+        return ServiceResponse.success("Update ZZZ achievements batch successfully.");
     }
 }

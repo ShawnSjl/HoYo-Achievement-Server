@@ -12,6 +12,8 @@ public interface ZzzBranchService extends IService<ZzzBranch> {
 
     ServiceResponse<List<Integer>> getAchievementInSameBranch(Integer achievementId);
 
-    // Import use
-    ServiceResponse<?> insertBranches(List<Map<String, Object>> branchMapList);
+    // Data migration use
+    ServiceResponse<?> insertBranchBatch(List<Map<String, Object>> branchMapList);
+
+    ServiceResponse<?> updateBranchBatch(List<Map<String, Object>> branchMapList);
 }
