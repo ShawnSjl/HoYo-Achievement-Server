@@ -14,6 +14,8 @@ import tech.sjiale.hoyo_achievement_server.mapper.ServerInfoMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service("serverInfoService")
@@ -62,7 +64,13 @@ public class ServerInfoServiceImpl extends ServiceImpl<ServerInfoMapper, ServerI
             ServerInfo serverInfo = BeanUtil.toBean(serverInfoMap, ServerInfo.class);
 
             // Check if all fields are filled
-            if (BeanUtil.hasNullField(serverInfo)) {
+            boolean hasMissingFields = Stream.of(
+                    serverInfo.getServerVersion(),
+                    serverInfo.getZzzVersion(),
+                    serverInfo.getSrVersion(),
+                    serverInfo.getUpdateDescription()
+            ).anyMatch(Objects::isNull);
+            if (hasMissingFields) {
                 log.warn("Invalid server info for insert: {}", serverInfoMap);
                 throw new IllegalArgumentException("Invalid server info for insert.");
             }
