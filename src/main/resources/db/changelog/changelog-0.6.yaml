@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_on_update_cascade_to_sr_tables
+      author: ShawnSjl
+      context: "dev,prod"
+      comment: "Update foreign keys for sr_user_record and sr_branch to support ON UPDATE CASCADE"
+      changes:
+        # -------------------------------------------------------
+        # 1. 处理 sr_user_record 表
+        # -------------------------------------------------------
+        # 第一步：删除旧的约束
+        - dropForeignKeyConstraint:
+            baseTableName: sr_user_record
+            constraintName: fk_su_achievement
+
+        # 第二步：添加带 ON UPDATE CASCADE 的新约束
+        - addForeignKeyConstraint:
+            constraintName: fk_su_achievement
+            baseTableName: sr_user_record
+            baseColumnNames: achievement_id
+            referencedTableName: sr_achievement
+            referencedColumnNames: achievement_id
+            onDelete: CASCADE
+            onUpdate: CASCADE
+
+        # -------------------------------------------------------
+        # 2. 处理 sr_branch 表
+        # -------------------------------------------------------
+        - dropForeignKeyConstraint:
+            baseTableName: sr_branch
+            constraintName: fk_sr_branch_achievement
+
+        - addForeignKeyConstraint:
+            constraintName: fk_sr_branch_achievement
+            baseTableName: sr_branch
+            baseColumnNames: achievement_id
+            referencedTableName: sr_achievement
+            referencedColumnNames: achievement_id
+            onDelete: CASCADE
+            onUpdate: CASCADE
+
+      # -------------------------------------------------------
+      # 回滚操作：恢复到只有 onDelete CASCADE 的状态
+      # -------------------------------------------------------
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: sr_user_record
+            constraintName: fk_su_achievement
+        - addForeignKeyConstraint:
+            constraintName: fk_su_achievement
+            baseTableName: sr_user_record
+            baseColumnNames: achievement_id
+            referencedTableName: sr_achievement
+            referencedColumnNames: achievement_id
+            onDelete: CASCADE
+
+        - dropForeignKeyConstraint:
+            baseTableName: sr_branch
+            constraintName: fk_sr_branch_achievement
+        - addForeignKeyConstraint:
+            constraintName: fk_sr_branch_achievement
+            baseTableName: sr_branch
+            baseColumnNames: achievement_id
+            referencedTableName: sr_achievement
+            referencedColumnNames: achievement_id
+            onDelete: CASCADE
