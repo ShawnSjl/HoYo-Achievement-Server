@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tech.sjiale.hoyo_achievement_server.dto.*;
 import tech.sjiale.hoyo_achievement_server.entity.DataMigration;
 import tech.sjiale.hoyo_achievement_server.mapper.DataMigrationMapper;
+import tech.sjiale.hoyo_achievement_server.util.GitUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +34,10 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
 
     @Value("${app.data-folder}")
     private String dataFolder;
+    @Value("${app.enable-jgit}")
+    private boolean enableJGit;
+    @Value("${app.data-repo-url}")
+    private String dataUrl;
 
     private final ServerInfoService serverInfoService;
     private final SrAchievementService srAchievementService;
@@ -66,19 +71,26 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     /**
      * Import new data from a directory.
      *
-     * @param path a directory path
      * @return ServiceResponse
      */
-    public ServiceResponse<List<MigrationResult>> importNewData(String path) {
-        Path p = Paths.get(path);
+    public ServiceResponse<List<MigrationResult>> importNewData() {
+        Path p = Paths.get(dataFolder);
         if (Files.isDirectory(p)) {
-            log.info("Start to get new data in directory: {}", path);
-            List<String> jsonFiles = findJSONInDirectory(path);
+
+            // Pull data from the remote repository if enabled
+            if (enableJGit) {
+                log.info("JGit is enabled, will pull data from remote repository: {}", dataUrl);
+                GitUtils.cloneOrPull(dataUrl, dataFolder);
+            }
+
+            // Find all JSON files in the directory
+            log.info("Start to get new data in directory: {}", dataFolder);
+            List<String> jsonFiles = findJSONInDirectory(dataFolder);
 
             // Return error if no JSON file found in the directory
             if (jsonFiles.isEmpty()) {
-                log.warn("No JSON file found in directory: {}", path);
-                return ServiceResponse.error("No JSON file found in directory: " + path);
+                log.warn("No JSON file found in directory: {}", dataFolder);
+                return ServiceResponse.error("No JSON file found in directory: " + dataFolder);
             }
 
             // Return list
@@ -106,8 +118,8 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
             log.debug("Import new data from directory successfully.");
             return ServiceResponse.success("Import new data successfully.", results);
         } else {
-            log.error("Given path is not a directory: {}", path);
-            return ServiceResponse.error("Given path is not a directory: " + path);
+            log.error("Given path is not a directory: {}", dataFolder);
+            return ServiceResponse.error("Given path is not a directory: " + dataFolder);
         }
     }
 
