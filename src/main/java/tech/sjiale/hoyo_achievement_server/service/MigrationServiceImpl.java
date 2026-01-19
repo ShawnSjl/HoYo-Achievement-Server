@@ -32,11 +32,11 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     @Lazy
     private MigrationService self;
 
-    @Value("${app.data-folder}")
+    @Value("${app.data.folder}")
     private String dataFolder;
-    @Value("${app.enable-jgit}")
+    @Value("${app.data.enable-jgit}")
     private boolean enableJGit;
-    @Value("${app.data-repo-url}")
+    @Value("${app.data.repo-url}")
     private String dataUrl;
 
     private final ServerInfoService serverInfoService;
