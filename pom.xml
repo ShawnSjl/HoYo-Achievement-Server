@@ -10,7 +10,7 @@
     </parent>
     <groupId>tech.sjiale</groupId>
     <artifactId>HoYo_Achievement_Server</artifactId>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.0.4-SNAPSHOT</version>
     <name>HoYo-Achievement-Server</name>
     <description>HoYo-Achievement-Server</description>
     <url/>
