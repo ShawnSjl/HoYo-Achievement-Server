@@ -37,4 +37,5 @@ build/
 
 ### Dev ###
 src/main/resources/application-dev.properties
+src/main/resources/application-staging.properties
 src/main/resources/static/

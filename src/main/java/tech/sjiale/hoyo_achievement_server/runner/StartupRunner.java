@@ -23,9 +23,6 @@ public class StartupRunner implements ApplicationRunner {
     private final MigrationService migrationService;
     private final UserService userService;
 
-    @Value("${app.data-folder}")
-    private String dataFolder;
-
     // args or yaml: --app.admin.initial-password=xxxxx
     @Value("${app.admin.initial-password:#{null}}")
     private String configuredPassword;
@@ -33,9 +30,10 @@ public class StartupRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         log.info("Start to import new data from local data folder");
-        ServiceResponse<List<MigrationResult>> response = migrationService.importNewData(dataFolder);
+        ServiceResponse<List<MigrationResult>> response = migrationService.importNewData();
         if (!response.success()) {
             log.error("Import new data failed. {}", response.message());
+            System.exit(1);
         }
 
         log.info("Check root user status");
@@ -72,6 +70,7 @@ public class StartupRunner implements ApplicationRunner {
             }
         } catch (Exception e) {
             log.error("Create root user failed.", e);
+            System.exit(1);
         }
     }
 

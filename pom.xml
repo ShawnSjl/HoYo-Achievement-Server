@@ -10,7 +10,7 @@
     </parent>
     <groupId>tech.sjiale</groupId>
     <artifactId>HoYo_Achievement_Server</artifactId>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.0.4-SNAPSHOT</version>
     <name>HoYo-Achievement-Server</name>
     <description>HoYo-Achievement-Server</description>
     <url/>
@@ -94,6 +94,14 @@
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>5.8.43</version>
+        </dependency>
+
+        <!-- Source: https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+            <version>7.5.0.202512021534-r</version>
+            <scope>compile</scope>
         </dependency>
 
     </dependencies>
