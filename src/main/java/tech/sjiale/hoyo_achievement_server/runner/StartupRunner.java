@@ -33,6 +33,7 @@ public class StartupRunner implements ApplicationRunner {
         ServiceResponse<List<MigrationResult>> response = migrationService.importNewData();
         if (!response.success()) {
             log.error("Import new data failed. {}", response.message());
+            System.exit(1);
         }
 
         log.info("Check root user status");
@@ -69,6 +70,7 @@ public class StartupRunner implements ApplicationRunner {
             }
         } catch (Exception e) {
             log.error("Create root user failed.", e);
+            System.exit(1);
         }
     }
 

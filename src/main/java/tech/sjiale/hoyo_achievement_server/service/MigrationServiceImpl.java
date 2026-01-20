@@ -74,15 +74,13 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
      * @return ServiceResponse
      */
     public ServiceResponse<List<MigrationResult>> importNewData() {
-        Path p = Paths.get(dataFolder);
-        if (Files.isDirectory(p)) {
+        // Pull data from the remote repository if enabled
+        if (enableJGit) {
+            log.info("JGit is enabled, will pull data from remote repository: {}", dataUrl);
+            GitUtils.cloneOrPull(dataUrl, dataFolder);
+        }
 
-            // Pull data from the remote repository if enabled
-            if (enableJGit) {
-                log.info("JGit is enabled, will pull data from remote repository: {}", dataUrl);
-                GitUtils.cloneOrPull(dataUrl, dataFolder);
-            }
-
+        if (Files.isDirectory(Paths.get(dataFolder))) {
             // Find all JSON files in the directory
             log.info("Start to get new data in directory: {}", dataFolder);
             List<String> jsonFiles = findJSONInDirectory(dataFolder);
