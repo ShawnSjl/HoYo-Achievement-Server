@@ -1,4 +1,4 @@
-name: Build Server App
+name: Build Server App For Staging
 
 on:
   push:
