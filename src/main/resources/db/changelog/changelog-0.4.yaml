@@ -82,6 +82,7 @@ databaseChangeLog:
             referencedTableName: sr_achievement
             referencedColumnNames: achievement_id
             onDelete: CASCADE
+            onUpdate: CASCADE
       rollback:
         - dropTable:
             tableName: sr_branch
@@ -134,6 +135,7 @@ databaseChangeLog:
             referencedTableName: sr_achievement
             referencedColumnNames: achievement_id
             onDelete: CASCADE
+            onUpdate: CASCADE
       rollback:
         - dropTable:
             tableName: sr_user_record
