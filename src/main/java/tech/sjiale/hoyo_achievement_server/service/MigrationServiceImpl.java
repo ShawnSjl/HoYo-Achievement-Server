@@ -40,6 +40,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     private String dataUrl;
 
     private final ServerUpdateLogService serverUpdateLogService;
+    private final GameInfoService gameInfoService;
     private final SrAchievementService srAchievementService;
     private final SrBranchService srBranchService;
     private final ZzzAchievementService zzzAchievementService;
@@ -291,6 +292,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     private void handleInsert(String table, List<Map<String, Object>> data) {
         ServiceResponse<?> res = switch (table) {
             case "server_update_log" -> serverUpdateLogService.insertServerUpdateLogBatch(data);
+            case "game_info" -> gameInfoService.insertGameInfoBatch(data);
             case "sr_achievement" -> srAchievementService.insertAchievementBatch(data);
             case "sr_branch" -> srBranchService.insertBranchBatch(data);
             case "zzz_achievement" -> zzzAchievementService.insertAchievementBatch(data);
@@ -316,6 +318,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     private void handleUpdate(String table, List<Map<String, Object>> data) {
         ServiceResponse<?> res = switch (table) {
             case "server_update_log" -> serverUpdateLogService.updateServerUpdateLogBatch(data);
+            case "game_info" -> gameInfoService.updateGameInfoBatch(data);
             case "sr_achievement" -> srAchievementService.updateAchievementBatch(data);
             case "sr_branch" -> srBranchService.updateBranchBatch(data);
             case "zzz_achievement" -> zzzAchievementService.updateAchievementBatch(data);
@@ -341,6 +344,7 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     private void handleDelete(String table, List<Map<String, Object>> data) {
         ServiceResponse<?> res = switch (table) {
             case "server_update_log" -> serverUpdateLogService.deleteServerUpdateLogBatch(data);
+            case "game_info" -> gameInfoService.deleteGameInfoBatch(data);
             case "sr_achievement" -> srAchievementService.deleteAchievementBatch(data);
             case "sr_branch" -> srBranchService.deleteBranchBatch(data);
             case "zzz_achievement" -> zzzAchievementService.deleteAchievementBatch(data);
