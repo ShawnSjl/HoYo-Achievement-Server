@@ -6,19 +6,13 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("server_info")
-public class ServerInfo {
-    @TableId(value = "info_id", type = IdType.AUTO)
-    private Long infoId;
+@TableName("server_update_log")
+public class ServerUpdateLog {
+    @TableId(value = "id", type = IdType.AUTO)
+    private Long id;
 
     @TableField(value = "server_version")
     private String serverVersion;
-
-    @TableField(value = "zzz_version")
-    private String zzzVersion;
-
-    @TableField(value = "sr_version")
-    private String srVersion;
 
     @TableField(value = "update_description")
     private String updateDescription;
