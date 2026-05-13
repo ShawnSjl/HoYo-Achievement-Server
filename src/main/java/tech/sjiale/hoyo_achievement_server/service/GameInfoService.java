@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface GameInfoService extends IService<GameInfo> {
-    ServiceResponse<List<GameInfo>> getAllGameInfo();
+//    ServiceResponse<List<GameInfo>> getAllGameInfo();
 
     ServiceResponse<GameInfo> getGameInfoByGameId(String gameId);
 

@@ -19,18 +19,18 @@ import java.util.Map;
 @Service("gameInfoService")
 public class GameInfoServiceImpl extends ServiceImpl<GameInfoMapper, GameInfo> implements GameInfoService {
 
-    /**
-     * Get all game info
-     *
-     * @return ServiceResponse with a list of GameInfo
-     */
-    public ServiceResponse<List<GameInfo>> getAllGameInfo() {
-        List<GameInfo> list = this.list();
-        if (list == null || list.isEmpty()) {
-            return ServiceResponse.error("No game info found.");
-        }
-        return ServiceResponse.success("Get all game info successfully.", list);
-    }
+//    /**
+//     * Get all game info
+//     *
+//     * @return ServiceResponse with a list of GameInfo
+//     */
+//    public ServiceResponse<List<GameInfo>> getAllGameInfo() {
+//        List<GameInfo> list = this.list();
+//        if (list == null || list.isEmpty()) {
+//            return ServiceResponse.error("No game info found.");
+//        }
+//        return ServiceResponse.success("Get all game info successfully.", list);
+//    }
 
     /**
      * Get game info by game id
