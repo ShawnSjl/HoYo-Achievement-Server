@@ -46,6 +46,10 @@ public class ServerUpdateLogController {
      */
     @GetMapping("/latest")
     public SaResult latestServerInfo(@RequestParam Long logID) {
+        if (logID < 0) {
+            return SaResult.error("非法Log ID").setCode(HttpStatus.BAD_REQUEST.value());
+        }
+
         ServiceResponse<List<ServerUpdateLog>> response = serverUpdateLogService.getLatestServerUpdateLog(logID);
         if (response.success()) {
             log.info(response.message());
