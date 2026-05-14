@@ -392,6 +392,7 @@ public class UserController {
 
         // Open safe for 2 minutes
         StpUtil.openSafe(120);
+        log.info("Second auth success for user {}.", userResponse.data().getUsername());
         return SaResult.ok("二级验证成功");
     }
 }
