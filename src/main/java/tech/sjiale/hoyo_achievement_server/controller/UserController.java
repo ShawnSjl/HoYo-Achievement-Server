@@ -40,7 +40,10 @@ public class UserController {
      * @return SaResult with token
      */
     @PostMapping("login")
-    public SaResult doLogin(@RequestBody LoginRequest request) {
+    public SaResult doLogin(
+            @RequestHeader Map<String, String> headers,
+            @RequestBody LoginRequest request
+    ) {
         // Check if the username and password are valid
         if (ParameterChecker.isUsernameInvalid(request.getUsername()) ||
                 ParameterChecker.isPasswordInvalid(request.getPassword())) {
@@ -67,7 +70,13 @@ public class UserController {
 
         // Set response data
         Map<String, Object> map = new HashMap<>();
-        map.put("token", StpUtil.getTokenInfo().tokenValue);
+
+        // If auth mode is bearer, set the token in the response
+        String authMode = headers.getOrDefault("x-auth-mode", "cookie");
+        if (authMode.equals("bearer")) {
+            map.put("token", StpUtil.getTokenInfo().tokenValue);
+        }
+
         map.put("username", userResponse.data().getUsername());
         map.put("isSuper", userResponse.data().getRole() != UserRole.USER);
         map.put("isRoot", userResponse.data().getRole() == UserRole.ROOT);
@@ -75,7 +84,7 @@ public class UserController {
     }
 
     /**
-     * Is user login; it will check token in header
+     * Is user login; it will check the token in the header
      *
      * @return SaResult
      */
@@ -246,7 +255,7 @@ public class UserController {
         // Check if the password matches
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         if (!passwordEncoder.matches(request.getOldPassword(), userResponse.data().getPassword())) {
-            log.error("Password doesn't match.");
+            log.error("Old password doesn't match.");
             return SaResult.error("密码错误").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
@@ -263,7 +272,7 @@ public class UserController {
     /**
      * Update user status;
      * Should only be called by admin or root;
-     * Admin cannot change status of another admin.
+     * Admin cannot change the status of another admin.
      *
      * @param request UpdateStatusRequest with user id and status
      * @return SaResult
@@ -377,12 +386,13 @@ public class UserController {
         // Check if the password matches
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         if (!passwordEncoder.matches(request.getPassword(), userResponse.data().getPassword())) {
-            log.error("Password doesn't match.");
+            log.error("Password doesn't match during second auth.");
             return SaResult.error("二级验证失败").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
         // Open safe for 2 minutes
         StpUtil.openSafe(120);
+        log.info("Second auth success for user {}.", userResponse.data().getUsername());
         return SaResult.ok("二级验证成功");
     }
 }

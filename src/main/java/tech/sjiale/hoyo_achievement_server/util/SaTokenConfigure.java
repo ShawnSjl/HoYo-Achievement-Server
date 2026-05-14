@@ -10,11 +10,13 @@ public class SaTokenConfigure implements WebMvcConfigurer {
 
     /**
      * Register the Sa-Token interceptor to enable annotation authentication
+     * <a href="https://www.sa-token.cc/doc.html#/use/at-check">Docs</a>
      *
      * @param registry InterceptorRegistry
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new SaInterceptor()).addPathPatterns("/**");
+        registry.addInterceptor(new SaInterceptor())
+                .addPathPatterns("/api/**");
     }
 }
