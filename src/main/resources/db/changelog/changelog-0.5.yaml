@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_data_change_log
+      author: ShawnSjl
+      context: "dev,prod"
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: data_change_log
+      changes:
+        - createTable:
+            tableName: data_change_log
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT UNSIGNED AUTO_INCREMENT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: scope
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: entity_type
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: entity_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: action
+                  type: VARCHAR(16)
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: data_change_log
