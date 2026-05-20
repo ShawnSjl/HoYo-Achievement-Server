@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.GameInfo;
+import tech.sjiale.hoyo_achievement_server.entity.nume.GameId;
 import tech.sjiale.hoyo_achievement_server.mapper.GameInfoMapper;
 
 import java.util.ArrayList;
@@ -19,26 +20,13 @@ import java.util.Map;
 @Service("gameInfoService")
 public class GameInfoServiceImpl extends ServiceImpl<GameInfoMapper, GameInfo> implements GameInfoService {
 
-//    /**
-//     * Get all game info
-//     *
-//     * @return ServiceResponse with a list of GameInfo
-//     */
-//    public ServiceResponse<List<GameInfo>> getAllGameInfo() {
-//        List<GameInfo> list = this.list();
-//        if (list == null || list.isEmpty()) {
-//            return ServiceResponse.error("No game info found.");
-//        }
-//        return ServiceResponse.success("Get all game info successfully.", list);
-//    }
-
     /**
      * Get game info by game id
      *
      * @param gameId game id
      * @return ServiceResponse with GameInfo
      */
-    public ServiceResponse<GameInfo> getGameInfoByGameId(String gameId) {
+    public ServiceResponse<GameInfo> getGameInfoByGameId(GameId gameId) {
         GameInfo gameInfo = this.lambdaQuery()
                 .eq(GameInfo::getGameId, gameId)
                 .one();
@@ -90,19 +78,24 @@ public class GameInfoServiceImpl extends ServiceImpl<GameInfoMapper, GameInfo> i
         List<GameInfo> updates = new ArrayList<>();
 
         for (Map<String, Object> gameInfoMap : gameInfoMapList) {
-            // Get record id from the map
-            Object recordIdObj = gameInfoMap.get("record_id");
-            if (recordIdObj == null) {
-                log.warn("Invalid game info for update: missing 'record_id' for lookup.");
-                throw new IllegalArgumentException("Invalid game info for update: missing 'record_id' for lookup.");
+            // Get target id from the map
+            Object target = gameInfoMap.get("target");
+            if (target == null) {
+                log.warn("Invalid game info for update: missing 'target' for lookup.");
+                throw new IllegalArgumentException("Invalid game info for update: missing 'target' for lookup.");
             }
-            String oldID = recordIdObj.toString();
+            if (!(target instanceof Map)) {
+                log.warn("Invalid server update log for update: 'target' is not a map.");
+                throw new IllegalArgumentException("Invalid server update log for update: 'target' is not a map.");
+            }
+            Map<String, Object> targetMap = (Map<String, Object>) target;
+            GameId gameId = GameId.valueOf(targetMap.get("game_id").toString());
 
             // Find target game info
-            GameInfo targetGameInfo = this.getById(oldID);
+            GameInfo targetGameInfo = this.getById(gameId);
             if (targetGameInfo == null) {
-                log.warn("No game info found with id: {}", oldID);
-                throw new IllegalArgumentException("No game info found with id: " + oldID);
+                log.warn("No game info found with id: {}", gameId);
+                throw new IllegalArgumentException("No game info found with id: " + gameId);
             }
 
             // Update target game info
@@ -114,15 +107,15 @@ public class GameInfoServiceImpl extends ServiceImpl<GameInfoMapper, GameInfo> i
             );
 
             // Handle the situation that id is changed
-            String newID = targetGameInfo.getGameId();
-            if (!oldID.equals(newID)) {
+            GameId newID = targetGameInfo.getGameId();
+            if (!gameId.equals(newID)) {
                 UpdateWrapper<GameInfo> updateWrapper = new UpdateWrapper<>();
-                updateWrapper.eq("game_id", oldID);
+                updateWrapper.eq("game_id", gameId);
                 updateWrapper.set("game_id", newID);
                 boolean success = this.update(targetGameInfo, updateWrapper);
                 if (!success) {
-                    log.warn("Failed to update game info for id: {}", oldID);
-                    throw new RuntimeException("Failed to update game info for id: " + oldID);
+                    log.warn("Failed to update game info for id: {}", gameId);
+                    throw new RuntimeException("Failed to update game info for id: " + gameId);
                 }
             } else {
                 // Save result to list

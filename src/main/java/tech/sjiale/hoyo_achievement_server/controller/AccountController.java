@@ -98,7 +98,7 @@ public class AccountController {
         Account newAccount = new Account();
         newAccount.setAccountUuid(account.getAccountUuid());
         newAccount.setUserId(userId);
-        newAccount.setGameType(account.getGameType());
+        newAccount.setGameId(account.getGameId());
         newAccount.setAccountName(account.getAccountName());
         newAccount.setAccountInGameUid(account.getAccountInGameUid());
 

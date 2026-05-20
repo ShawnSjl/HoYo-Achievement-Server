@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import tech.sjiale.hoyo_achievement_server.dto.*;
 import tech.sjiale.hoyo_achievement_server.dto.achievement_request.UpdateRecordRequest;
 import tech.sjiale.hoyo_achievement_server.entity.*;
+import tech.sjiale.hoyo_achievement_server.entity.nume.GameId;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserStatus;
 import tech.sjiale.hoyo_achievement_server.service.*;
 
@@ -24,9 +25,8 @@ public class ZzzAchievementController {
 
     private final AccountService accountService;
     private final UserService userService;
-    private final ZzzUserRecordService zzzUserRecordService;
-    private final ZzzAchievementService zzzAchievementService;
-    private final ZzzBranchService zzzBranchService;
+    private final AchievementService achievementService;
+    private final UserRecordService userRecordService;
 
     /**
      * Get all ZZZ achievements
@@ -35,7 +35,7 @@ public class ZzzAchievementController {
      */
     @GetMapping("all")
     public SaResult getAllAchievements() {
-        ServiceResponse<List<ZzzAchievement>> response = zzzAchievementService.getAllAchievements();
+        ServiceResponse<List<Achievement>> response = achievementService.getAllAchievementsByGameId(GameId.ZZZ);
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("ZZZ成就列表获取失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
@@ -65,7 +65,7 @@ public class ZzzAchievementController {
             return SaResult.error("非对应用户请求").setCode(HttpStatus.FORBIDDEN.value());
         }
 
-        ServiceResponse<List<ZzzUserRecord>> response = zzzUserRecordService.getAllRecordByUUID(uuid);
+        ServiceResponse<List<UserRecord>> response = userRecordService.getAllRecordByUUID(uuid);
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("账号ZZZ成就记录获取失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
@@ -101,28 +101,13 @@ public class ZzzAchievementController {
         }
 
         // Update record
-        ServiceResponse<?> response = zzzUserRecordService.updateRecordById(request.getUuid(),
+        ServiceResponse<?> response = userRecordService.updateRecordById(request.getUuid(), GameId.ZZZ,
                 request.getAchievementId(), request.getCompleteStatus());
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("成就更新失败").setCode(HttpStatus.BAD_REQUEST.value());
         }
         return SaResult.ok("成就更新状态成功");
-    }
-
-    /**
-     * Get all branches
-     *
-     * @return SaResult
-     */
-    @GetMapping("branches")
-    public SaResult getAllBranches() {
-        ServiceResponse<List<ZzzBranch>> response = zzzBranchService.getAllBranches();
-        if (!response.success()) {
-            log.error(response.message());
-            return SaResult.error("获取ZZZ成就分支列表失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        }
-        return SaResult.ok("获取ZZZ成就分支列表成功").setData(response.data());
     }
 
     /**

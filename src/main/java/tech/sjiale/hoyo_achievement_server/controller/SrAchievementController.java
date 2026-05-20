@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.dto.achievement_request.UpdateRecordRequest;
 import tech.sjiale.hoyo_achievement_server.entity.*;
+import tech.sjiale.hoyo_achievement_server.entity.nume.GameId;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserStatus;
 import tech.sjiale.hoyo_achievement_server.service.*;
 
@@ -24,9 +25,8 @@ public class SrAchievementController {
 
     private final AccountService accountService;
     private final UserService userService;
-    private final SrUserRecordService srUserRecordService;
-    private final SrAchievementService srAchievementService;
-    private final SrBranchService srBranchService;
+    private final AchievementService achievementService;
+    private final UserRecordService userRecordService;
 
     /**
      * Get all SR achievements
@@ -35,7 +35,7 @@ public class SrAchievementController {
      */
     @GetMapping("all")
     public SaResult getAllAchievements() {
-        ServiceResponse<List<SrAchievement>> response = srAchievementService.getAllAchievements();
+        ServiceResponse<List<Achievement>> response = achievementService.getAllAchievementsByGameId(GameId.HSR);
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("SR成就列表获取失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
@@ -65,7 +65,7 @@ public class SrAchievementController {
             return SaResult.error("非对应用户请求").setCode(HttpStatus.FORBIDDEN.value());
         }
 
-        ServiceResponse<List<SrUserRecord>> response = srUserRecordService.getAllRecordByUUID(uuid);
+        ServiceResponse<List<UserRecord>> response = userRecordService.getAllRecordByUUID(uuid);
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("账号SR成就记录获取失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
@@ -101,28 +101,12 @@ public class SrAchievementController {
         }
 
         // Update record
-        ServiceResponse<?> response = srUserRecordService.updateRecordById(request.getUuid(),
-                request.getAchievementId(), request.getCompleteStatus());
+        ServiceResponse<?> response = userRecordService.updateRecordById(request.getUuid(), GameId.HSR, request.getAchievementId(), request.getCompleteStatus());
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("成就更新失败").setCode(HttpStatus.BAD_REQUEST.value());
         }
         return SaResult.ok("成就更新状态成功");
-    }
-
-    /**
-     * Get all branches
-     *
-     * @return SaResult
-     */
-    @GetMapping("branches")
-    public SaResult getAllBranches() {
-        ServiceResponse<List<SrBranch>> response = srBranchService.getAllBranches();
-        if (!response.success()) {
-            log.error(response.message());
-            return SaResult.error("获取SR成就分支列表失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        }
-        return SaResult.ok("获取SR成就分支列表成功").setData(response.data());
     }
 
     /**

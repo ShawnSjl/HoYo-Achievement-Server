@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.GameInfo;
+import tech.sjiale.hoyo_achievement_server.entity.nume.GameId;
 import tech.sjiale.hoyo_achievement_server.service.GameInfoService;
 
 import java.util.List;
@@ -45,7 +46,7 @@ public class GameInfoController {
      * @return SaResult
      */
     @GetMapping("/id")
-    public SaResult getGameInfoByGameId(@RequestParam String gameId) {
+    public SaResult getGameInfoByGameId(@RequestParam GameId gameId) {
         ServiceResponse<GameInfo> response = gameInfoService.getGameInfoByGameId(gameId);
         if (response.success()) {
             log.info(response.message());

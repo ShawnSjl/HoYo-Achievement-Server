@@ -1,69 +1,46 @@
 databaseChangeLog:
   - changeSet:
-      id: create_users
+      id: create_data_migration
       author: ShawnSjl
       context: "dev, prod"
       preConditions:
         - onFail: MARK_RAN
         - not:
             tableExists:
-              tableName: users
+              tableName: data_migration
       changes:
         - createTable:
-            tableName: users
-            remarks: 用户表
+            tableName: data_migration
+            remarks: 数据加载表
             columns:
-              - column: { name: id, type: BIGINT UNSIGNED AUTO_INCREMENT, constraints: { primaryKey: true } }
-              - column: { name: username, type: VARCHAR(50), constraints: { nullable: false, unique: true } }
-              - column: { name: password, type: VARCHAR(512), constraints: { nullable: false } }
-              - column: { name: role, type: VARCHAR(16), constraints: { nullable: false } }
-              - column: { name: status, type: VARCHAR(16), constraints: { nullable: false } }
-              - column: { name: created_at, type: DATETIME, defaultValueComputed: CURRENT_TIMESTAMP }
-              - column: { name: updated_at, type: DATETIME, defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP }
+              - column:
+                  name: id
+                  type: BIGINT UNSIGNED AUTO_INCREMENT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: path
+                  type: VARCHAR(1024)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: VARCHAR(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: depends
+                  type: TEXT
+              - column:
+                  name: migration_time
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       rollback:
-        - dropTable: { tableName: users }
-
-  - changeSet:
-      id: create_account
-      author: ShawnSjl
-      context: "dev, prod"
-      preConditions:
-        - tableExists:
-            tableName: users
-        - onFail: MARK_RAN
-        - not:
-            tableExists:
-              tableName: account
-      changes:
-        - createTable:
-            tableName: account
-            remarks: 账号表
-            columns:
-              - column: { name: account_uuid, type: VARCHAR(512), constraints: { primaryKey: true } }
-              - column: { name: user_id, type: BIGINT UNSIGNED, constraints: { nullable: false } }
-              - column: { name: game_type, type: VARCHAR(24), constraints: { nullable: false } }
-              - column: { name: account_name, type: VARCHAR(24), constraints: { nullable: false } }
-              - column: { name: account_in_game_uid, type: VARCHAR(128) }
-        - addForeignKeyConstraint:
-            constraintName: fk_users_account_user_id
-            baseTableName: account
-            baseColumnNames: user_id
-            referencedTableName: users
-            referencedColumnNames: id
-            onDelete: CASCADE
-      rollback:
-        - dropTable: { tableName: account }
-
-  - changeSet:
-      id: add-user-index
-      author: ShawnSjl
-      context: "dev, prod"
-      changes:
-        - createIndex:
-            tableName: users
-            indexName: ix_user_username
-            unique: true
-            columns:
-              - column: { name: username }
-      rollback:
-        - dropIndex: { tableName: users, indexName: ix_user_username }
+        - dropTable: { tableName: data_migration }
