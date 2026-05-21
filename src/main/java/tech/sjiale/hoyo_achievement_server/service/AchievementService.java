@@ -12,7 +12,7 @@ public interface AchievementService extends IService<Achievement> {
 
     ServiceResponse<List<Achievement>> getAllAchievementsByGameId(GameId gameId);
 
-//    ServiceResponse<List<Achievement>> getAllBranchesByGameId(GameId gameId);
+    ServiceResponse<List<Achievement>> getAllBranchesByGameId(GameId gameId);
 
     ServiceResponse<Achievement> getAchievementById(GameId gameId, Integer achievementId);
 

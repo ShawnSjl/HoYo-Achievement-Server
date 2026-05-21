@@ -44,6 +44,22 @@ public class AchievementController {
     }
 
     /**
+     * Get all branches by game id
+     *
+     * @param gameId game id
+     * @return SaResult
+     */
+    @GetMapping("branches")
+    public SaResult getAllBranchByGameId(@RequestParam GameId gameId) {
+        ServiceResponse<List<Achievement>> response = achievementService.getAllBranchesByGameId(gameId);
+        if (!response.success()) {
+            log.error(response.message());
+            return SaResult.error(gameId + "成就分支列表获取失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        }
+        return SaResult.ok(gameId + "成就分支列表获取成功").setData(response.data());
+    }
+
+    /**
      * Get all records of an account
      *
      * @param uuid account uuid

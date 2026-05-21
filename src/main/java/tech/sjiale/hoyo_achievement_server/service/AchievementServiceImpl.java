@@ -32,6 +32,8 @@ public class AchievementServiceImpl extends ServiceImpl<AchievementMapper, Achie
         // Get achievements by game id
         List<Achievement> achievements = this.lambdaQuery()
                 .eq(Achievement::getGameId, gameId)
+                .select(Achievement::getAchievementId, Achievement::getCategory, Achievement::getName,
+                        Achievement::getDescription, Achievement::getRewardLevel, Achievement::getGameVersion)
                 .list();
         if (achievements == null || achievements.isEmpty()) {
             return ServiceResponse.error("No achievements found with game id: " + gameId);
@@ -41,10 +43,27 @@ public class AchievementServiceImpl extends ServiceImpl<AchievementMapper, Achie
         return ServiceResponse.success("Get achievements by game id: " + gameId, achievements);
     }
 
-//    @Override
-//    public ServiceResponse<List<Achievement>> getAllBranchesByGameId(GameId gameId) {
-//        return null;
-//    }
+    /**
+     * Get all branches by game id
+     *
+     * @param gameId game id
+     * @return ServiceResponse with a list of Achievement
+     */
+    @Override
+    public ServiceResponse<List<Achievement>> getAllBranchesByGameId(GameId gameId) {
+        // Get achievement IDs by game id
+        List<Achievement> achievements = this.lambdaQuery()
+                .eq(Achievement::getGameId, gameId)
+                .ne(Achievement::getBranchId, 0)
+                .select(Achievement::getAchievementId, Achievement::getBranchId)
+                .list();
+        if (achievements == null) {
+            return ServiceResponse.error("No achievements found with game id: " + gameId);
+        }
+        
+        log.debug("Get branches by game id: {} successfully.", gameId);
+        return ServiceResponse.success("Get branches by game id: " + gameId, achievements);
+    }
 
     /**
      * Get achievement by game id and achievement id
