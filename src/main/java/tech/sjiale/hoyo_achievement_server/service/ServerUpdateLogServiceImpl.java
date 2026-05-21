@@ -96,13 +96,18 @@ public class ServerUpdateLogServiceImpl extends ServiceImpl<ServerUpdateLogMappe
         List<ServerUpdateLog> updates = new ArrayList<>();
 
         for (Map<String, Object> serverUpdateLogMap : serverUpdateLogMapList) {
-            // Get record id from the map
-            Object recordIdObj = serverUpdateLogMap.get("record_id");
-            if (recordIdObj == null) {
-                log.warn("Invalid server update log for update: missing 'record_id' for lookup.");
-                throw new IllegalArgumentException("Invalid server update log for update: missing 'record_id' for lookup.");
+            // Get target id from the map
+            Object target = serverUpdateLogMap.get("target");
+            if (target == null) {
+                log.warn("Invalid server update log for update: missing 'target' for lookup.");
+                throw new IllegalArgumentException("Invalid server update log for update: missing 'target' for lookup.");
             }
-            Long oldId = Long.valueOf(recordIdObj.toString());
+            if (!(target instanceof Map)) {
+                log.warn("Invalid server update log for update: 'target' is not a map.");
+                throw new IllegalArgumentException("Invalid server update log for update: 'target' is not a map.");
+            }
+            Map<String, Object> targetMap = (Map<String, Object>) target;
+            Long oldId = Long.valueOf(targetMap.get("id").toString());
 
             // Find target server update log
             ServerUpdateLog targetLog = this.getById(oldId);

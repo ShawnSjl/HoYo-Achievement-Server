@@ -1,29 +1,5 @@
 databaseChangeLog:
   - changeSet:
-      id: create_data_migration
-      author: ShawnSjl
-      context: "dev, prod"
-      preConditions:
-        - onFail: MARK_RAN
-        - not:
-            tableExists:
-              tableName: data_migration
-      changes:
-        - createTable:
-            tableName: data_migration
-            remarks: 数据加载表
-            columns:
-              - column: { name: id, type: BIGINT UNSIGNED AUTO_INCREMENT, constraints: { primaryKey: true } }
-              - column: { name: name, type: VARCHAR(128), constraints: { nullable: false, unique: true } }
-              - column: { name: path, type: VARCHAR(1024), constraints: { nullable: false } }
-              - column: { name: type, type: VARCHAR(16), constraints: { nullable: false } }
-              - column: { name: depends, type: TEXT }
-              - column: { name: migration_time, type: DATETIME, defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE
-                CURRENT_TIMESTAMP }
-      rollback:
-        - dropTable: { tableName: data_migration }
-
-  - changeSet:
       id: create_server_update_log
       author: ShawnSjl
       context: "dev, prod"

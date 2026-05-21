@@ -28,6 +28,8 @@ public interface UserService extends IService<User> {
 
     ServiceResponse<?> deleteUser(Long id);
 
+    ServiceResponse<Boolean> isUserDisabled(Long id);
+
     // Startup Use
     ServiceResponse<Boolean> hasRootUser();
 

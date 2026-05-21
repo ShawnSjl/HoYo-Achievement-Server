@@ -18,4 +18,6 @@ public interface AccountService extends IService<Account> {
     ServiceResponse<?> updateAccountInGameUid(String uuid, String newInGameUid);
 
     ServiceResponse<?> deleteAccount(String uuid);
+
+    ServiceResponse<Boolean> isUserOwnAccount(Long userId, String uuid);
 }
