@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeAction;
-import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeScope;
 import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeEntityType;
 
 @Data
@@ -14,8 +13,8 @@ public class DataChangeLog {
     @TableId(value = "version")
     private Long version;
 
-    @TableField(value = "scope")
-    private ChangeScope scope;
+    @TableField(value = "user_id")
+    private Long userId;
 
     @TableField(value = "entity_type")
     private ChangeEntityType entityType;

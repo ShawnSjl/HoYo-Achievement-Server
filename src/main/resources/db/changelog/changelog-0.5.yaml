@@ -19,8 +19,8 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: scope
-                  type: VARCHAR(64)
+                  name: user_id
+                  type: BIGINT UNSIGNED
                   constraints:
                     nullable: false
               - column:
