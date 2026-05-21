@@ -132,4 +132,29 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         }
         return ServiceResponse.success("Delete account successfully for uuid: " + uuid);
     }
+
+    /**
+     * Check if the user owns the account
+     *
+     * @param userId user id
+     * @param uuid   account uuid
+     * @return ServiceResponse with a boolean value
+     */
+    @Override
+    public ServiceResponse<Boolean> isUserOwnAccount(Long userId, String uuid) {
+        // Get all accounts by user id
+        List<Account> accounts = this.lambdaQuery().eq(Account::getUserId, userId).list();
+
+        if (accounts == null) {
+            return ServiceResponse.error("Get all accounts by user id failed.");
+        } else if (accounts.isEmpty()) {
+            return ServiceResponse.success("No account found for user id: " + userId, false);
+        }
+
+        boolean isOwn = accounts.stream().anyMatch(account -> account.getAccountUuid().equals(uuid));
+        if (!isOwn) {
+            return ServiceResponse.success("User doesn't own account: " + uuid, false);
+        }
+        return ServiceResponse.success("User owns account: " + uuid, true);
+    }
 }

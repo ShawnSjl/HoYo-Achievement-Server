@@ -23,23 +23,6 @@ public class GameInfoController {
 
     private final GameInfoService gameInfoService;
 
-//    /**
-//     * Get all game info
-//     *
-//     * @return SaResult
-//     */
-//    @GetMapping("/all")
-//    public SaResult getAllGameInfo() {
-//        ServiceResponse<List<GameInfo>> response = gameInfoService.getAllGameInfo();
-//        if (response.success()) {
-//            log.info(response.message());
-//            return SaResult.ok("获取全部游戏信息成功").setData(response.data());
-//        } else {
-//            log.error(response.message());
-//            return SaResult.error("获取全部游戏信息失败").setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-//        }
-//    }
-
     /**
      * Get game info by game id
      *

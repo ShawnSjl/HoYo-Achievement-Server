@@ -267,6 +267,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return ServiceResponse.success("Delete user successfully: " + id);
     }
 
+    @Override
+    public ServiceResponse<Boolean> isUserDisabled(Long id) {
+        User user = getById(id);
+        if (user == null) {
+            return ServiceResponse.error("User id doesn't exist: " + id);
+        }
+        return ServiceResponse.success("Get user status successfully: " + id, user.getStatus() == UserStatus.DISABLED);
+    }
+
     /**
      * Check if there is a root user
      *
