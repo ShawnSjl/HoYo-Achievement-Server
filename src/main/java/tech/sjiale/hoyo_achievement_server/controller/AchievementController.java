@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.dto.achievement_request.UpdateRecordRequest;
 import tech.sjiale.hoyo_achievement_server.entity.*;
+import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeAction;
+import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeEntityType;
 import tech.sjiale.hoyo_achievement_server.entity.nume.GameId;
 import tech.sjiale.hoyo_achievement_server.service.*;
 import tech.sjiale.hoyo_achievement_server.util.ParameterChecker;
@@ -26,6 +28,7 @@ public class AchievementController {
     private final UserService userService;
     private final AchievementService achievementService;
     private final UserRecordService userRecordService;
+    private final DataChangeLogService dataChangeLogService;
 
     /**
      * Get all achievements by game id
@@ -154,6 +157,9 @@ public class AchievementController {
             log.error(response.message());
             return SaResult.error("成就更新失败").setCode(HttpStatus.BAD_REQUEST.value());
         }
+
+        // Add change log
+        dataChangeLogService.addChangeLog(userId, ChangeEntityType.ACCOUNT_RECORD, request.getUuid(), ChangeAction.UPDATE);
         return SaResult.ok("成就更新状态成功");
     }
 }

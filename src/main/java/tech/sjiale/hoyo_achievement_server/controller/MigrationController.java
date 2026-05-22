@@ -13,6 +13,9 @@ import tech.sjiale.hoyo_achievement_server.dto.ImportStatus;
 import tech.sjiale.hoyo_achievement_server.dto.MigrationResult;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.DataMigration;
+import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeAction;
+import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeEntityType;
+import tech.sjiale.hoyo_achievement_server.service.DataChangeLogService;
 import tech.sjiale.hoyo_achievement_server.service.MigrationService;
 
 import java.util.*;
@@ -24,6 +27,7 @@ import java.util.*;
 public class MigrationController {
 
     private final MigrationService migrationService;
+    private final DataChangeLogService dataChangeLogService;
 
     @GetMapping("/all")
     @SaCheckLogin
@@ -59,6 +63,11 @@ public class MigrationController {
             log.error("Import new data from data folder failed. {}", response.message());
         }
 
+        // Add change log
+        if (!resultList.isEmpty()) {
+            // Use 0 as the user id, to notice all users
+            dataChangeLogService.addChangeLog(0L, ChangeEntityType.ACHIEVEMENT, "", ChangeAction.INSERT);
+        }
         return SaResult.ok("导入本地数据成功").setData(resultList);
     }
 }

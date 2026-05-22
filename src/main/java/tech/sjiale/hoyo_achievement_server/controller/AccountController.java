@@ -14,7 +14,10 @@ import tech.sjiale.hoyo_achievement_server.dto.account_request.AccountUpdateUidR
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.dto.account_request.AccountDeleteRequest;
 import tech.sjiale.hoyo_achievement_server.entity.Account;
+import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeAction;
+import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeEntityType;
 import tech.sjiale.hoyo_achievement_server.service.AccountService;
+import tech.sjiale.hoyo_achievement_server.service.DataChangeLogService;
 import tech.sjiale.hoyo_achievement_server.service.UserService;
 import tech.sjiale.hoyo_achievement_server.util.ParameterChecker;
 
@@ -29,6 +32,7 @@ public class AccountController {
 
     private final AccountService accountService;
     private final UserService userService;
+    private final DataChangeLogService dataChangeLogService;
 
     /**
      * Get all accounts by user id;
@@ -157,6 +161,9 @@ public class AccountController {
         // Update account name
         ServiceResponse<?> response = accountService.updateAccountName(req.getAccountUuid(), req.getAccountName());
         log.info(response.message());
+
+        // Add change log
+        dataChangeLogService.addChangeLog(userId, ChangeEntityType.ACCOUNT, req.getAccountUuid(), ChangeAction.UPDATE);
         return SaResult.ok("游戏账户名称更新成功");
     }
 
@@ -203,6 +210,9 @@ public class AccountController {
         // Update account in game uid
         ServiceResponse<?> response = accountService.updateAccountInGameUid(req.getAccountUuid(), req.getAccountInGameUid());
         log.info(response.message());
+
+        // Add change log
+        dataChangeLogService.addChangeLog(userId, ChangeEntityType.ACCOUNT, req.getAccountUuid(), ChangeAction.UPDATE);
         return SaResult.ok("游戏账户uid更新成功");
     }
 
@@ -249,6 +259,9 @@ public class AccountController {
         // Delete that account
         ServiceResponse<?> response = accountService.deleteAccount(req.getAccountUuid());
         log.info(response.message());
+
+        // Add change log
+        dataChangeLogService.addChangeLog(userId, ChangeEntityType.ACCOUNT, req.getAccountUuid(), ChangeAction.DELETE);
         return SaResult.ok("删除账户成功");
     }
 }

@@ -17,7 +17,10 @@ import tech.sjiale.hoyo_achievement_server.dto.user_request.UserExposeDto;
 import tech.sjiale.hoyo_achievement_server.dto.user_request.*;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.User;
+import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeAction;
+import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeEntityType;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserRole;
+import tech.sjiale.hoyo_achievement_server.service.DataChangeLogService;
 import tech.sjiale.hoyo_achievement_server.service.UserService;
 import tech.sjiale.hoyo_achievement_server.util.ParameterChecker;
 
@@ -32,6 +35,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final DataChangeLogService dataChangeLogService;
 
     /**
      * Login
@@ -223,6 +227,9 @@ public class UserController {
             return SaResult.error("用户名已存在").setCode(HttpStatus.BAD_REQUEST.value());
         }
         log.info(response.message());
+
+        // Add change log
+        dataChangeLogService.addChangeLog(userId, ChangeEntityType.USER, "", ChangeAction.UPDATE);
         return SaResult.ok("用户名更新成功");
     }
 
@@ -295,7 +302,7 @@ public class UserController {
         // Get target user
         ServiceResponse<User> targetUserResponse = userService.getUserById(request.getUserId());
         if (!targetUserResponse.success()) {
-            log.error(currentUserResponse.message());
+            log.error(targetUserResponse.message());
             return SaResult.error("用户不存在").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
@@ -312,6 +319,9 @@ public class UserController {
             return SaResult.error("状态更新错误").setCode(HttpStatus.BAD_REQUEST.value());
         }
         log.info(response.message());
+
+        // Add change log
+        dataChangeLogService.addChangeLog(request.getUserId(), ChangeEntityType.USER, "", ChangeAction.UPDATE);
         return SaResult.ok("状态更新成功");
     }
 
@@ -334,6 +344,9 @@ public class UserController {
             return SaResult.error("权限更新错误").setCode(HttpStatus.BAD_REQUEST.value());
         }
         log.info(response.message());
+
+        // Add change log
+        dataChangeLogService.addChangeLog(request.getUserId(), ChangeEntityType.USER, "", ChangeAction.UPDATE);
         return SaResult.ok("用户权限更新成功");
     }
 
