@@ -235,7 +235,8 @@ public class AchievementController {
         }
 
         // Add change log
-        dataChangeLogService.addChangeLog(userId, ChangeEntityType.ACCOUNT_RECORD, "", ChangeAction.UPDATE);
+        // use 'uuid' as entity key, means need to update all records of the account
+        dataChangeLogService.addChangeLog(userId, ChangeEntityType.ACCOUNT_RECORD, firstAccountUuid, ChangeAction.UPDATE);
         return SaResult.ok("成就状态更新完成");
     }
 }
