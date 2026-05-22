@@ -62,6 +62,37 @@ public class UserRecordServiceImpl extends ServiceImpl<UserRecordMapper, UserRec
         return ServiceResponse.success("Update achievement record successfully.");
     }
 
+    /**
+     * Update user records in a batch
+     *
+     * @param userRecords List of user records
+     * @return ServiceResponse
+     */
+    @Override
+    public ServiceResponse<?> updateRecordBatch(List<UserRecord> userRecords) {
+        for (UserRecord userRecord : userRecords) {
+            // Check if achievement exists
+            if (!achievementService.getAchievementById(userRecord.getGameId(), userRecord.getAchievementId()).success()) {
+                return ServiceResponse.error("Achievement id doesn't exist: " + userRecord.getAchievementId());
+            }
+
+            updateRecord(userRecord.getAccountUuid(), userRecord.getGameId(), userRecord.getAchievementId(), userRecord.getComplete());
+
+            // Update achievements in same branch
+            ServiceResponse<List<Achievement>> response = achievementService.getAchievementsInSameBranch(userRecord.getGameId(), userRecord.getAchievementId());
+            if (!response.success()) {
+                throw new RuntimeException("Failed to get achievements in same branch.");
+            }
+            if (!response.data().isEmpty()) {
+                Integer branchStatus = userRecord.getComplete() == 1 ? 2 : 0;
+                for (Achievement achievement : response.data()) {
+                    updateRecord(userRecord.getAccountUuid(), achievement.getGameId(), achievement.getAchievementId(), branchStatus);
+                }
+            }
+        }
+        return ServiceResponse.success("Update achievement record batch successfully.");
+    }
+
     private void updateRecord(String uuid, GameId gameId, Integer achievementId, Integer completeStatus) {
         UserRecord record = this.lambdaQuery()
                 .eq(UserRecord::getAccountUuid, uuid)

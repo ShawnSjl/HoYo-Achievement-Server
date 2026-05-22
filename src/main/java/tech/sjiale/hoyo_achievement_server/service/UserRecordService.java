@@ -11,4 +11,6 @@ public interface UserRecordService extends IService<UserRecord> {
     ServiceResponse<List<UserRecord>> getAllRecordByUUID(String uuid);
 
     ServiceResponse<?> updateRecordById(String uuid, GameId gameId, Integer achievementId, Integer completeStatus);
+
+    ServiceResponse<?> updateRecordBatch(List<UserRecord> userRecords);
 }
