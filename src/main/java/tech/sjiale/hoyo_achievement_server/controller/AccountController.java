@@ -58,6 +58,38 @@ public class AccountController {
     }
 
     /**
+     * Get an account by account uuid; Should only be called by the user itself; Should be called after user login,
+     * satoken will authenticate the user
+     *
+     * @param accountUuid account uuid
+     * @return SaResult
+     */
+    @GetMapping("/get-by-uuid")
+    @SaCheckLogin
+    public SaResult getAccountByUuid(@RequestParam String accountUuid) {
+        // Valid
+        if (ParameterChecker.isAccountUuidInvalid(accountUuid)) {
+            return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
+        }
+
+        // Get account by uuid
+        ServiceResponse<Account> response = accountService.getAccountByUuid(accountUuid);
+        if (!response.success()) {
+            log.error(response.message());
+            return SaResult.error("获取用户账号失败").setCode(HttpStatus.BAD_REQUEST.value());
+        }
+
+        // Check if the account belongs to the user
+        if (response.data().getUserId() != StpUtil.getLoginIdAsLong()) {
+            log.warn("User {} tried to get account {} that not belong to it.", StpUtil.getLoginIdAsLong(), accountUuid);
+            return SaResult.error("获取用户账号失败").setCode(HttpStatus.BAD_REQUEST.value());
+        }
+
+        log.info("{} UUID: {}", response.message(), accountUuid);
+        return SaResult.ok("获取指定用户账号成功").setData(response.data());
+    }
+
+    /**
      * Create a new account;
      * One user could have maximum 10 accounts;
      * Should only be called by the user itself;
