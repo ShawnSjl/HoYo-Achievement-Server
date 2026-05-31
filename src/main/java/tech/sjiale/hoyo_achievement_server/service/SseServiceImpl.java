@@ -1,6 +1,7 @@
 package tech.sjiale.hoyo_achievement_server.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -44,6 +45,28 @@ public class SseServiceImpl {
 
         log.info("User {} and client {} connected to SSE.", userId, clientId);
         return emitter;
+    }
+
+    /**
+     * Send a heartbeat to all connected clients every 20 seconds
+     */
+    @Scheduled(fixedRate = 20000)
+    public void sendHeartbeat() {
+        if (emitters.isEmpty()) {
+            return;
+        }
+
+        log.debug("SSE sending heartbeat to connected clients...");
+        emitters.forEach((userId, map) -> {
+            map.forEach((clientId, emitter) -> {
+                try {
+                    emitter.send(SseEmitter.event().name("heartbeat").data("keepalive"));
+                } catch (IOException e) {
+                    log.error("Failed to send heartbeat to client {} for user {}", clientId, userId);
+                    removeEmitter(userId, clientId);
+                }
+            });
+        });
     }
 
     private void removeEmitter(long userId, String clientId) {
