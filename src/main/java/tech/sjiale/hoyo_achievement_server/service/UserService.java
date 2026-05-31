@@ -18,15 +18,15 @@ public interface UserService extends IService<User> {
 
     ServiceResponse<?> createUser(String username, String password);
 
-    ServiceResponse<?> updateUsername(Long id, String newUsername);
+    ServiceResponse<?> updateUsername(Long userId, String clientId, String newUsername);
 
-    ServiceResponse<?> updatePassword(Long id, String newPassword);
+    ServiceResponse<?> updatePassword(Long userId, String newPassword);
 
-    ServiceResponse<?> updateUserStatus(Long id, UserStatus status);
+    ServiceResponse<?> updateUserStatus(Long targetUserId, UserStatus status);
 
-    ServiceResponse<?> updateUserRole(Long id, UserRole role);
+    ServiceResponse<?> updateUserRole(Long targetUserId, UserRole role);
 
-    ServiceResponse<?> deleteUser(Long id);
+    ServiceResponse<?> deleteUser(Long userId, String clientId);
 
     ServiceResponse<Boolean> isUserDisabled(Long id);
 

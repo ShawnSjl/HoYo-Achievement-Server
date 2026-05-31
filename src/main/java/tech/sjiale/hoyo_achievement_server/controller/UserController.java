@@ -17,10 +17,7 @@ import tech.sjiale.hoyo_achievement_server.dto.user_request.UserExposeDto;
 import tech.sjiale.hoyo_achievement_server.dto.user_request.*;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.User;
-import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeAction;
-import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeEntityType;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserRole;
-import tech.sjiale.hoyo_achievement_server.service.DataChangeLogService;
 import tech.sjiale.hoyo_achievement_server.service.UserService;
 import tech.sjiale.hoyo_achievement_server.util.ParameterChecker;
 
@@ -35,7 +32,6 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
-    private final DataChangeLogService dataChangeLogService;
 
     /**
      * Login
@@ -204,13 +200,14 @@ public class UserController {
     /**
      * Update username
      *
-     * @param request UpdateUsernameRequest with a new username
+     * @param clientId client id, used to identify the source of the request
+     * @param request  UpdateUsernameRequest with a new username
      * @return SaResult
      */
     @PutMapping("update-username")
     @SaCheckLogin
     @SaCheckSafe
-    public SaResult updateUsername(@RequestBody UpdateUsernameRequest request) {
+    public SaResult updateUsername(@RequestParam String clientId, @RequestBody UpdateUsernameRequest request) {
         // Check if the username is valid
         if (ParameterChecker.isUsernameInvalid(request.getUsername())) {
             log.error("Invalid new username: {}", request.getUsername());
@@ -221,15 +218,13 @@ public class UserController {
         Long userId = StpUtil.getLoginIdAsLong();
 
         // Update username
-        ServiceResponse<?> response = userService.updateUsername(userId, request.getUsername());
+        ServiceResponse<?> response = userService.updateUsername(userId, clientId, request.getUsername());
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("用户名已存在").setCode(HttpStatus.BAD_REQUEST.value());
         }
         log.info(response.message());
 
-        // Add change log
-        dataChangeLogService.addChangeLog(userId, ChangeEntityType.USER, "", ChangeAction.UPDATE);
         return SaResult.ok("用户名更新成功");
     }
 
@@ -320,8 +315,6 @@ public class UserController {
         }
         log.info(response.message());
 
-        // Add change log
-        dataChangeLogService.addChangeLog(request.getUserId(), ChangeEntityType.USER, "", ChangeAction.UPDATE);
         return SaResult.ok("状态更新成功");
     }
 
@@ -345,8 +338,6 @@ public class UserController {
         }
         log.info(response.message());
 
-        // Add change log
-        dataChangeLogService.addChangeLog(request.getUserId(), ChangeEntityType.USER, "", ChangeAction.UPDATE);
         return SaResult.ok("用户权限更新成功");
     }
 
@@ -354,17 +345,18 @@ public class UserController {
      * Delete user;
      * Should only be called by the user itself
      *
+     * @param clientId client id, used to identify the source of the request
      * @return SaResult
      */
     @DeleteMapping("delete")
     @SaCheckLogin
     @SaCheckSafe
-    public SaResult deleteUser() {
+    public SaResult deleteUser(@RequestParam String clientId) {
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
         // Delete user
-        ServiceResponse<?> response = userService.deleteUser(userId);
+        ServiceResponse<?> response = userService.deleteUser(userId, clientId);
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("Root账户无法删除").setCode(HttpStatus.BAD_REQUEST.value());
