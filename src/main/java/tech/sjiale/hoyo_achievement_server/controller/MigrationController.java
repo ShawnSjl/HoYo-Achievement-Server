@@ -9,13 +9,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import tech.sjiale.hoyo_achievement_server.dto.ChangeLog;
+import tech.sjiale.hoyo_achievement_server.dto.changelog.ChangeLog;
 import tech.sjiale.hoyo_achievement_server.dto.ImportStatus;
 import tech.sjiale.hoyo_achievement_server.dto.MigrationResult;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.DataMigration;
-import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeAction;
-import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeEntityType;
+import tech.sjiale.hoyo_achievement_server.dto.changelog.ChangeAction;
+import tech.sjiale.hoyo_achievement_server.dto.changelog.ChangeEntityType;
 import tech.sjiale.hoyo_achievement_server.service.MigrationService;
 import tech.sjiale.hoyo_achievement_server.service.SseServiceImpl;
 

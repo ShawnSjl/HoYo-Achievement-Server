@@ -1,4 +1,4 @@
-package tech.sjiale.hoyo_achievement_server.entity.nume;
+package tech.sjiale.hoyo_achievement_server.dto.changelog;
 
 public enum ChangeEntityType {
     USER,

@@ -5,11 +5,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tech.sjiale.hoyo_achievement_server.dto.ChangeLog;
+import tech.sjiale.hoyo_achievement_server.dto.changelog.ChangeLog;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.Account;
-import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeAction;
-import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeEntityType;
+import tech.sjiale.hoyo_achievement_server.dto.changelog.ChangeAction;
+import tech.sjiale.hoyo_achievement_server.dto.changelog.ChangeEntityType;
 import tech.sjiale.hoyo_achievement_server.mapper.AccountMapper;
 
 import java.util.List;
