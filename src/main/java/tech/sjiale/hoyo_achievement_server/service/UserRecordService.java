@@ -10,7 +10,7 @@ import java.util.List;
 public interface UserRecordService extends IService<UserRecord> {
     ServiceResponse<List<UserRecord>> getAllRecordByUUID(String uuid);
 
-    ServiceResponse<?> updateRecordById(String uuid, GameId gameId, Integer achievementId, Integer completeStatus);
+    ServiceResponse<?> updateRecordById(Long userId, String clientId, String uuid, GameId gameId, Integer achievementId, Integer completeStatus);
 
-    ServiceResponse<?> updateRecordBatch(List<UserRecord> userRecords);
+    ServiceResponse<?> updateRecordBatch(Long userId, String clientId, List<UserRecord> userRecords);
 }

@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.dto.achievement_request.UpdateRecordRequest;
 import tech.sjiale.hoyo_achievement_server.entity.*;
-import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeAction;
-import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeEntityType;
 import tech.sjiale.hoyo_achievement_server.entity.nume.GameId;
 import tech.sjiale.hoyo_achievement_server.service.*;
 import tech.sjiale.hoyo_achievement_server.util.ParameterChecker;
@@ -29,7 +27,6 @@ public class AchievementController {
     private final UserService userService;
     private final AchievementService achievementService;
     private final UserRecordService userRecordService;
-    private final DataChangeLogService dataChangeLogService;
 
     /**
      * Get all achievements by game id
@@ -112,12 +109,13 @@ public class AchievementController {
     /**
      * Update achievement by id
      *
-     * @param request UpdateRecordRequest with achievement id and record status
+     * @param clientId client id, used to identify the source of the request
+     * @param request  UpdateRecordRequest with achievement id and record status
      * @return SaResult
      */
     @PutMapping("update")
     @SaCheckLogin
-    public SaResult updateAchievementById(@RequestBody UpdateRecordRequest request) {
+    public SaResult updateAchievementById(@RequestParam String clientId, @RequestBody UpdateRecordRequest request) {
         // Validate input
         if (ParameterChecker.isAccountUuidInvalid(request.getUuid())) {
             return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
@@ -152,29 +150,26 @@ public class AchievementController {
         }
 
         // Update record
-        ServiceResponse<?> response = userRecordService.updateRecordById(request.getUuid(), request.getGameId(),
-                request.getAchievementId(), request.getCompleteStatus());
+        ServiceResponse<?> response = userRecordService.updateRecordById(userId, clientId,
+                request.getUuid(), request.getGameId(), request.getAchievementId(), request.getCompleteStatus());
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("成就更新失败").setCode(HttpStatus.BAD_REQUEST.value());
         }
 
-        // Add change log
-        // use 'uuid'&'game_id'&'achievement_id' as entity key
-        String entityKey = request.getUuid() + "&" + request.getGameId() + "&" + request.getAchievementId();
-        dataChangeLogService.addChangeLog(userId, ChangeEntityType.ACCOUNT_RECORD, entityKey, ChangeAction.UPDATE);
         return SaResult.ok("成就状态更新成功");
     }
 
     /**
      * Update achievement record batch
      *
+     * @param clientId    client id, used to identify the source of the request
      * @param requestList List of UpdateRecordRequest
      * @return SaResult
      */
     @PutMapping("update-batch")
     @SaCheckLogin
-    public SaResult updateAchievementBatch(@RequestBody List<UpdateRecordRequest> requestList) {
+    public SaResult updateAchievementBatch(@RequestParam String clientId, @RequestBody List<UpdateRecordRequest> requestList) {
         if (requestList.isEmpty()) {
             return SaResult.error("更新列表为空").setCode(HttpStatus.BAD_REQUEST.value());
         }
@@ -228,15 +223,12 @@ public class AchievementController {
         }
 
         // Update record batch
-        ServiceResponse<?> response = userRecordService.updateRecordBatch(batch);
+        ServiceResponse<?> response = userRecordService.updateRecordBatch(userId, clientId, batch);
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("成就状态更新失败").setCode(HttpStatus.BAD_REQUEST.value());
         }
 
-        // Add change log
-        // use 'uuid' as entity key, means need to update all records of the account
-        dataChangeLogService.addChangeLog(userId, ChangeEntityType.ACCOUNT_RECORD, firstAccountUuid, ChangeAction.UPDATE);
         return SaResult.ok("成就状态更新完成");
     }
 }
