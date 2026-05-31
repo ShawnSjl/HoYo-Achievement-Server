@@ -60,13 +60,13 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     /**
      * Create a new account; should only be called by the user itself
      *
-     * @param account  Account entity
      * @param userId   user id
      * @param clientId client id
+     * @param account  Account entity
      * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> createAccount(Account account, Long userId, String clientId) {
+    public ServiceResponse<?> createAccount(Long userId, String clientId, Account account) {
         // Check the uniqueness of uuid
         ServiceResponse<Account> response = getAccountByUuid(account.getAccountUuid());
         if (response.success()) {
@@ -93,14 +93,14 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     /**
      * Update account name; should only be called by the user itself
      *
-     * @param uuid     account uuid
-     * @param newName  new account name
      * @param userId   user id
      * @param clientId client id
+     * @param uuid     account uuid
+     * @param newName  new account name
      * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> updateAccountName(String uuid, String newName, Long userId, String clientId) {
+    public ServiceResponse<?> updateAccountName(Long userId, String clientId, String uuid, String newName) {
         // Update account name
         boolean updated = this.lambdaUpdate()
                 .eq(Account::getAccountUuid, uuid)
@@ -124,13 +124,13 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     /**
      * Update account in game uid; should only be called by the user itself
      *
-     * @param uuid     account uuid
      * @param userId   user id
      * @param clientId client id
+     * @param uuid     account uuid
      * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> updateAccountInGameUid(String uuid, String newInGameUid, Long userId, String clientId) {
+    public ServiceResponse<?> updateAccountInGameUid(Long userId, String clientId, String uuid, String newInGameUid) {
         // Update account in game uid
         boolean updated = this.lambdaUpdate()
                 .eq(Account::getAccountUuid, uuid)
@@ -154,13 +154,13 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     /**
      * Delete an account by account uuid; should only be called by the user itself
      *
-     * @param uuid     account uuid
      * @param userId   user id
      * @param clientId client id
+     * @param uuid     account uuid
      * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> deleteAccount(String uuid, Long userId, String clientId) {
+    public ServiceResponse<?> deleteAccount(Long userId, String clientId, String uuid) {
         // Delete an account
         boolean removed = this.lambdaUpdate()
                 .eq(Account::getAccountUuid, uuid)

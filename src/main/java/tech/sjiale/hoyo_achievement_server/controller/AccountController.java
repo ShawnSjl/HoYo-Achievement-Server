@@ -137,7 +137,7 @@ public class AccountController {
         newAccount.setAccountInGameUid(account.getAccountInGameUid());
 
         // Create that account
-        ServiceResponse<?> response = accountService.createAccount(newAccount, userId, clientId);
+        ServiceResponse<?> response = accountService.createAccount(userId, clientId, newAccount);
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("创建用户失败").setCode(HttpStatus.BAD_REQUEST.value());
@@ -188,8 +188,8 @@ public class AccountController {
         }
 
         // Update account name
-        ServiceResponse<?> response = accountService.updateAccountName(req.getAccountUuid(), req.getAccountName(),
-                userId, clientId);
+        ServiceResponse<?> response = accountService.updateAccountName(userId, clientId, req.getAccountUuid(), req.getAccountName()
+        );
         log.info(response.message());
 
         return SaResult.ok("游戏账户名称更新成功");
@@ -237,8 +237,8 @@ public class AccountController {
         }
 
         // Update account in game uid
-        ServiceResponse<?> response = accountService.updateAccountInGameUid(req.getAccountUuid(), req.getAccountInGameUid(),
-                userId, clientId);
+        ServiceResponse<?> response = accountService.updateAccountInGameUid(userId, clientId, req.getAccountUuid(), req.getAccountInGameUid()
+        );
         log.info(response.message());
 
         return SaResult.ok("游戏账户uid更新成功");
@@ -286,7 +286,7 @@ public class AccountController {
         }
 
         // Delete that account
-        ServiceResponse<?> response = accountService.deleteAccount(req.getAccountUuid(), userId, clientId);
+        ServiceResponse<?> response = accountService.deleteAccount(userId, clientId, req.getAccountUuid());
         log.info(response.message());
 
         return SaResult.ok("删除账户成功");
