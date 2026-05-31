@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.dto.user_request.UserExposeDto;
-import tech.sjiale.hoyo_achievement_server.entity.Account;
 import tech.sjiale.hoyo_achievement_server.entity.User;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserRole;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserStatus;
@@ -21,8 +20,6 @@ import java.util.List;
 @Service("userService")
 @RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
-
-    private final AccountService accountService;
 
     /**
      * Get user by id
@@ -247,16 +244,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = this.getById(id);
         if (user != null && user.getRole() == UserRole.ROOT) {
             return ServiceResponse.error("Root user cannot be deleted.");
-        }
-
-        // Delete all accounts associated with the user
-        ServiceResponse<List<Account>> response = accountService.getAllAccountsByUserId(id);
-        if (!response.success()) {
-            log.error(response.message());
-        } else {
-            for (Account account : response.data()) {
-                accountService.deleteAccount(account.getAccountUuid());
-            }
         }
 
         // Delete user
