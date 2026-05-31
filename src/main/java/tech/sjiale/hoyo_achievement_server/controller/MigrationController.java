@@ -9,14 +9,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import tech.sjiale.hoyo_achievement_server.dto.ChangeLog;
 import tech.sjiale.hoyo_achievement_server.dto.ImportStatus;
 import tech.sjiale.hoyo_achievement_server.dto.MigrationResult;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.entity.DataMigration;
 import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeAction;
 import tech.sjiale.hoyo_achievement_server.entity.nume.ChangeEntityType;
-import tech.sjiale.hoyo_achievement_server.service.DataChangeLogService;
 import tech.sjiale.hoyo_achievement_server.service.MigrationService;
+import tech.sjiale.hoyo_achievement_server.service.SseServiceImpl;
 
 import java.util.*;
 
@@ -27,7 +28,7 @@ import java.util.*;
 public class MigrationController {
 
     private final MigrationService migrationService;
-    private final DataChangeLogService dataChangeLogService;
+    private final SseServiceImpl sseService;
 
     @GetMapping("/all")
     @SaCheckLogin
@@ -47,7 +48,7 @@ public class MigrationController {
     @SaCheckLogin
     @SaCheckRole(value = {"ADMIN", "ROOT"}, mode = SaMode.OR)
     @SaCheckSafe
-    public SaResult migrateDataFolder() {
+    public SaResult migrateDataFolder(@RequestParam String clientId) {
         // Return list, only includes the success and failed result
         List<MigrationResult> resultList = new ArrayList<>();
 
@@ -63,11 +64,15 @@ public class MigrationController {
             log.error("Import new data from data folder failed. {}", response.message());
         }
 
-        // Add change log
+        // Create changelog and broadcast it if there are any changes
         if (!resultList.isEmpty()) {
-            // Use 0 as the user id, to notice all users
-            dataChangeLogService.addChangeLog(0L, ChangeEntityType.ACHIEVEMENT, "", ChangeAction.INSERT);
+            ChangeLog changeLog = new ChangeLog();
+            changeLog.setEntityType(ChangeEntityType.ACHIEVEMENT);
+            changeLog.setEntityId("");
+            changeLog.setAction(ChangeAction.UPDATE);
+            sseService.broadcastUpdate(0L, clientId, changeLog);
         }
+
         return SaResult.ok("导入本地数据成功").setData(resultList);
     }
 }
