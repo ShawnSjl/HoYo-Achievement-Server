@@ -1,7 +1,11 @@
 package tech.sjiale.hoyo_achievement_server.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -11,7 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service("sseService")
-public class SseServiceImpl {
+@Component
+public class SseServiceImpl implements ApplicationListener<ContextClosedEvent> {
 
     private final Map<Long, Map<String, SseEmitter>> emitters = new ConcurrentHashMap<>();
 
@@ -67,6 +72,26 @@ public class SseServiceImpl {
                 }
             });
         });
+    }
+
+    /**
+     * Shutdown the SSE service
+     */
+    @Override
+    public void onApplicationEvent(@NonNull ContextClosedEvent event) {
+        log.info("Context closed, shutting down SSE service...");
+
+        for (Map<String, SseEmitter> map : emitters.values()) {
+            for (SseEmitter emitter : map.values()) {
+                try {
+                    emitter.send(SseEmitter.event().name("system").data("shutdown"));
+                    emitter.completeWithError(new IOException("Server shutting down"));
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        emitters.clear();
+        log.info("SSE service shut down.");
     }
 
     private void removeEmitter(long userId, String clientId) {
