@@ -149,6 +149,32 @@ public class UserController {
     }
 
     /**
+     * Get user info;
+     *
+     * @return SaResult with user info
+     */
+    @GetMapping("info")
+    @SaCheckLogin
+    public SaResult getUserInfo() {
+        // Get user id from token
+        Long userId = StpUtil.getLoginIdAsLong();
+
+        // Check if the user is root
+        ServiceResponse<User> currentUser = userService.getUserById(userId);
+        if (!currentUser.success()) {
+            log.error(currentUser.message());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, currentUser.message());
+        }
+
+        // Set response data
+        Map<String, Object> map = new HashMap<>();
+        map.put("username", currentUser.data().getUsername());
+        map.put("isSuper", currentUser.data().getRole() != UserRole.USER);
+        map.put("isRoot", currentUser.data().getRole() == UserRole.ROOT);
+        return SaResult.ok("获取用户信息成功").setData(map);
+    }
+
+    /**
      * Get all users;
      * Should only be called by admin or root
      *
