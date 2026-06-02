@@ -7,10 +7,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tech.sjiale.hoyo_achievement_server.dto.changelog.ChangeLog;
 import tech.sjiale.hoyo_achievement_server.dto.ServiceResponse;
 import tech.sjiale.hoyo_achievement_server.dto.user_request.UserExposeDto;
-import tech.sjiale.hoyo_achievement_server.entity.Account;
 import tech.sjiale.hoyo_achievement_server.entity.User;
+import tech.sjiale.hoyo_achievement_server.dto.changelog.ChangeAction;
+import tech.sjiale.hoyo_achievement_server.dto.changelog.ChangeEntityType;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserRole;
 import tech.sjiale.hoyo_achievement_server.entity.nume.UserStatus;
 import tech.sjiale.hoyo_achievement_server.mapper.UserMapper;
@@ -22,7 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
-    private final AccountService accountService;
+    private final SseServiceImpl sseService;
 
     /**
      * Get user by id
@@ -108,12 +110,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     /**
      * Update username; should only be called by the user itself
      *
-     * @param id          user id
+     * @param userId      user id
+     * @param clientId    client id
      * @param newUsername new username
      * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> updateUsername(Long id, String newUsername) {
+    public ServiceResponse<?> updateUsername(Long userId, String clientId, String newUsername) {
         // Reserve the root username
         if (newUsername.equals("root")) {
             return ServiceResponse.error("Root username cannot be created.");
@@ -127,67 +130,83 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // Update username
         boolean updated = this.lambdaUpdate()
-                .eq(User::getId, id)
+                .eq(User::getId, userId)
                 .set(User::getUsername, newUsername)
                 .update();
         if (!updated) {
             throw new RuntimeException("Update username failed: " + newUsername);
         }
+
+        // Create changelog and broadcast it
+        ChangeLog changeLog = new ChangeLog();
+        changeLog.setEntityType(ChangeEntityType.USER);
+        changeLog.setEntityId("");
+        changeLog.setAction(ChangeAction.UPDATE);
+        sseService.broadcastUpdate(userId, clientId, changeLog);
+
         return ServiceResponse.success("Update username successfully: ", newUsername);
     }
 
     /**
      * Update user password; should only be called by the user itself
      *
-     * @param id          user id
+     * @param userId      user id
      * @param newPassword new password
      * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> updatePassword(Long id, String newPassword) {
+    public ServiceResponse<?> updatePassword(Long userId, String newPassword) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String hashedPassword = passwordEncoder.encode(newPassword);
 
         // Update password
         boolean updated = this.lambdaUpdate()
-                .eq(User::getId, id)
+                .eq(User::getId, userId)
                 .set(User::getPassword, hashedPassword)
                 .update();
         if (!updated) {
-            throw new RuntimeException("Update password failed: " + id);
+            throw new RuntimeException("Update password failed: " + userId);
         }
-        return ServiceResponse.success("Update password successfully: " + id);
+        return ServiceResponse.success("Update password successfully: " + userId);
     }
 
     /**
      * Update user status, cannot disable a root account; should only be called by admin and root
      *
-     * @param id     user id
-     * @param status new status
+     * @param targetUserId user id
+     * @param status       new status
      * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> updateUserStatus(Long id, UserStatus status) {
+    public ServiceResponse<?> updateUserStatus(Long targetUserId, UserStatus status) {
         // Check if the user exists
-        ServiceResponse<User> response = getUserById(id);
+        ServiceResponse<User> response = getUserById(targetUserId);
         if (!response.success()) {
-            return ServiceResponse.error("Target user doesn't exist, update status failed: " + id);
+            return ServiceResponse.error("Target user doesn't exist, update status failed: " + targetUserId);
         }
 
         // Check if the user is root, root cannot be disabled
         if (response.data().getRole() == UserRole.ROOT) {
-            return ServiceResponse.error("Root user cannot be disabled: " + id);
+            return ServiceResponse.error("Root user cannot be disabled: " + targetUserId);
         }
 
         // Update user status
         boolean updated = this.lambdaUpdate()
-                .eq(User::getId, id)
+                .eq(User::getId, targetUserId)
                 .set(User::getStatus, status)
                 .update();
         if (!updated) {
-            throw new RuntimeException("Update user status failed: " + id);
+            throw new RuntimeException("Update user status failed: " + targetUserId);
         }
-        return ServiceResponse.success("Update user status successfully: " + id);
+
+        // Create changelog and broadcast it
+        ChangeLog changeLog = new ChangeLog();
+        changeLog.setEntityType(ChangeEntityType.USER);
+        changeLog.setEntityId("");
+        changeLog.setAction(ChangeAction.UPDATE);
+        sseService.broadcastUpdate(targetUserId, "", changeLog);
+
+        return ServiceResponse.success("Update user status successfully: " + targetUserId);
     }
 
     /**
@@ -196,21 +215,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * Root cannot be assigned or root changed to another role;
      * Admin user should not exceed 5.
      *
-     * @param id   user id
-     * @param role new role
+     * @param targetUserId user id
+     * @param role         new role
      * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> updateUserRole(Long id, UserRole role) {
+    public ServiceResponse<?> updateUserRole(Long targetUserId, UserRole role) {
         // Cannot set to root
         if (role == UserRole.ROOT) {
             return ServiceResponse.error("Root cannot be assigned to a user.");
         }
 
         // Check if the user exists
-        ServiceResponse<User> response = getUserById(id);
+        ServiceResponse<User> response = getUserById(targetUserId);
         if (!response.success()) {
-            return ServiceResponse.error("Target user doesn't exist, update status failed: " + id);
+            return ServiceResponse.error("Target user doesn't exist, update status failed: " + targetUserId);
         }
 
         // Cannot change the role of a root user
@@ -226,45 +245,52 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // Update user role
         boolean updated = this.lambdaUpdate()
-                .eq(User::getId, id)
+                .eq(User::getId, targetUserId)
                 .set(User::getRole, role)
                 .update();
         if (!updated) {
-            throw new RuntimeException("Update user role failed: " + id);
+            throw new RuntimeException("Update user role failed: " + targetUserId);
         }
-        return ServiceResponse.success("Update user role successfully: " + id);
+
+        // Create changelog and broadcast it
+        ChangeLog changeLog = new ChangeLog();
+        changeLog.setEntityType(ChangeEntityType.USER);
+        changeLog.setEntityId("");
+        changeLog.setAction(ChangeAction.UPDATE);
+        sseService.broadcastUpdate(targetUserId, "", changeLog);
+
+        return ServiceResponse.success("Update user role successfully: " + targetUserId);
     }
 
     /**
      * Delete user, cannot delete root user; should only be called by the user itself
      *
-     * @param id user id
+     * @param userId   user id
+     * @param clientId client id
      * @return ServiceResponse
      */
     @Transactional
-    public ServiceResponse<?> deleteUser(Long id) {
+    public ServiceResponse<?> deleteUser(Long userId, String clientId) {
         // Cannot delete root user
-        User user = this.getById(id);
+        User user = this.getById(userId);
         if (user != null && user.getRole() == UserRole.ROOT) {
             return ServiceResponse.error("Root user cannot be deleted.");
         }
 
-        // Delete all accounts associated with the user
-        ServiceResponse<List<Account>> response = accountService.getAllAccountsByUserId(id);
-        if (!response.success()) {
-            log.error(response.message());
-        } else {
-            for (Account account : response.data()) {
-                accountService.deleteAccount(account.getAccountUuid());
-            }
+        // Delete user
+        boolean removed = this.removeById(userId);
+        if (!removed) {
+            throw new RuntimeException("Delete user failed: " + userId);
         }
 
-        // Delete user
-        boolean removed = this.removeById(id);
-        if (!removed) {
-            throw new RuntimeException("Delete user failed: " + id);
-        }
-        return ServiceResponse.success("Delete user successfully: " + id);
+        // Create changelog and broadcast it
+        ChangeLog changeLog = new ChangeLog();
+        changeLog.setEntityType(ChangeEntityType.USER);
+        changeLog.setEntityId("");
+        changeLog.setAction(ChangeAction.DELETE);
+        sseService.broadcastUpdate(userId, clientId, changeLog);
+
+        return ServiceResponse.success("Delete user successfully: " + userId);
     }
 
     @Override

@@ -19,7 +19,6 @@ import tech.sjiale.hoyo_achievement_server.service.UserService;
 import tech.sjiale.hoyo_achievement_server.util.ParameterChecker;
 
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -54,17 +53,50 @@ public class AccountController {
     }
 
     /**
+     * Get an account by account uuid; Should only be called by the user itself; Should be called after user login,
+     * satoken will authenticate the user
+     *
+     * @param accountUuid account uuid
+     * @return SaResult
+     */
+    @GetMapping("/get-by-uuid")
+    @SaCheckLogin
+    public SaResult getAccountByUuid(@RequestParam String accountUuid) {
+        // Valid
+        if (ParameterChecker.isAccountUuidInvalid(accountUuid)) {
+            return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
+        }
+
+        // Get account by uuid
+        ServiceResponse<Account> response = accountService.getAccountByUuid(accountUuid);
+        if (!response.success()) {
+            log.error(response.message());
+            return SaResult.error("获取用户账号失败").setCode(HttpStatus.BAD_REQUEST.value());
+        }
+
+        // Check if the account belongs to the user
+        if (response.data().getUserId() != StpUtil.getLoginIdAsLong()) {
+            log.warn("User {} tried to get account {} that not belong to it.", StpUtil.getLoginIdAsLong(), accountUuid);
+            return SaResult.error("获取用户账号失败").setCode(HttpStatus.BAD_REQUEST.value());
+        }
+
+        log.info("{} UUID: {}", response.message(), accountUuid);
+        return SaResult.ok("获取指定用户账号成功").setData(response.data());
+    }
+
+    /**
      * Create a new account;
      * One user could have maximum 10 accounts;
      * Should only be called by the user itself;
      * Should be called after user login, satoken will authenticate the user
      *
-     * @param account Account entity
+     * @param clientId client id, used to identify the source of the request
+     * @param account  Account entity
      * @return SaResult
      */
     @PostMapping("/create")
     @SaCheckLogin
-    public SaResult createAccount(@RequestBody AccountCreateRequest account) {
+    public SaResult createAccount(@RequestParam String clientId, @RequestBody AccountCreateRequest account) {
         // Valid
         if (ParameterChecker.isAccountUuidInvalid(account.getAccountUuid())
                 || ParameterChecker.isAccountNameInvalid(account.getAccountName())
@@ -105,7 +137,7 @@ public class AccountController {
         newAccount.setAccountInGameUid(account.getAccountInGameUid());
 
         // Create that account
-        ServiceResponse<?> response = accountService.createAccount(newAccount);
+        ServiceResponse<?> response = accountService.createAccount(userId, clientId, newAccount);
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("创建用户失败").setCode(HttpStatus.BAD_REQUEST.value());
@@ -119,12 +151,13 @@ public class AccountController {
      * Should only be called by the user itself;
      * Should be called after user login, satoken will authenticate the user
      *
-     * @param req AccountUpdateNameRequest
+     * @param clientId client id, used to identify the source of the request
+     * @param req      AccountUpdateNameRequest
      * @return SaResult
      */
     @PutMapping("/update-name")
     @SaCheckLogin
-    public SaResult updateAccountName(@RequestBody AccountUpdateNameRequest req) {
+    public SaResult updateAccountName(@RequestParam String clientId, @RequestBody AccountUpdateNameRequest req) {
         // Validate input
         if (ParameterChecker.isAccountUuidInvalid(req.getAccountUuid())
                 || ParameterChecker.isAccountNameInvalid(req.getAccountName())) {
@@ -155,8 +188,10 @@ public class AccountController {
         }
 
         // Update account name
-        ServiceResponse<?> response = accountService.updateAccountName(req.getAccountUuid(), req.getAccountName());
+        ServiceResponse<?> response = accountService.updateAccountName(userId, clientId, req.getAccountUuid(), req.getAccountName()
+        );
         log.info(response.message());
+
         return SaResult.ok("游戏账户名称更新成功");
     }
 
@@ -165,12 +200,13 @@ public class AccountController {
      * Should only be called by the user itself;
      * Should be called after user login, satoken will authenticate the user
      *
-     * @param req AccountUpdateUidRequest
+     * @param clientId client id, used to identify the source of the request
+     * @param req      AccountUpdateUidRequest
      * @return SaResult
      */
     @PutMapping("/update-in-game-uid")
     @SaCheckLogin
-    public SaResult updateAccountInGameUid(@RequestBody AccountUpdateUidRequest req) {
+    public SaResult updateAccountInGameUid(@RequestParam String clientId, @RequestBody AccountUpdateUidRequest req) {
         // Validate input
         if (ParameterChecker.isAccountUuidInvalid(req.getAccountUuid())
                 || ParameterChecker.isAccountInGameUidInvalid(req.getAccountInGameUid())) {
@@ -201,8 +237,10 @@ public class AccountController {
         }
 
         // Update account in game uid
-        ServiceResponse<?> response = accountService.updateAccountInGameUid(req.getAccountUuid(), req.getAccountInGameUid());
+        ServiceResponse<?> response = accountService.updateAccountInGameUid(userId, clientId, req.getAccountUuid(), req.getAccountInGameUid()
+        );
         log.info(response.message());
+
         return SaResult.ok("游戏账户uid更新成功");
     }
 
@@ -211,13 +249,14 @@ public class AccountController {
      * Should only be called by the user itself;
      * Should be called after user login, satoken will authenticate the user
      *
-     * @param req AccountDeleteRequest
+     * @param clientId client id, used to identify the source of the request
+     * @param req      AccountDeleteRequest
      * @return SaResult
      */
     @DeleteMapping("/delete")
     @SaCheckLogin
     @SaCheckSafe
-    public SaResult deleteAccount(@RequestBody AccountDeleteRequest req) {
+    public SaResult deleteAccount(@RequestParam String clientId, @RequestBody AccountDeleteRequest req) {
         // Validate input
         if (ParameterChecker.isAccountUuidInvalid(req.getAccountUuid())) {
             return SaResult.error("错误请求内容").setCode(HttpStatus.BAD_REQUEST.value());
@@ -247,8 +286,9 @@ public class AccountController {
         }
 
         // Delete that account
-        ServiceResponse<?> response = accountService.deleteAccount(req.getAccountUuid());
+        ServiceResponse<?> response = accountService.deleteAccount(userId, clientId, req.getAccountUuid());
         log.info(response.message());
+
         return SaResult.ok("删除账户成功");
     }
 }
