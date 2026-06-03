@@ -1,47 +1,67 @@
 databaseChangeLog:
   - changeSet:
-      id: create_server_info
+      id: create_server_update_log
       author: ShawnSjl
       context: "dev, prod"
       preConditions:
         - onFail: MARK_RAN
         - not:
             tableExists:
-              tableName: server_info
+              tableName: server_update_log
       changes:
         - createTable:
-            tableName: server_info
-            remarks: 服务器信息表
+            tableName: server_update_log
+            remarks: 服务器更新信息表
             columns:
-              - column: { name: info_id, type: BIGINT UNSIGNED AUTO_INCREMENT, constraints: { primaryKey: true } }
-              - column: { name: server_version, type: VARCHAR(24), constraints: { nullable: false} }
-              - column: { name: zzz_version, type: VARCHAR(24), constraints: { nullable: false } }
-              - column: { name: sr_version, type: VARCHAR(24), constraints: { nullable: false } }
-              - column: { name: update_description, type: VARCHAR(1024), constraints: { nullable: false } }
-              - column: { name: updated_at, type: DATETIME, defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP }
+              - column:
+                  name: id
+                  type: BIGINT UNSIGNED AUTO_INCREMENT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: server_version
+                  type: VARCHAR(24)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: update_description
+                  type: VARCHAR(1024)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       rollback:
-        - dropTable: { tableName: server_info }
+        - dropTable:
+            tableName: server_update_log
 
   - changeSet:
-      id: create_data_migration
+      id: create_game_info
       author: ShawnSjl
       context: "dev, prod"
       preConditions:
         - onFail: MARK_RAN
         - not:
             tableExists:
-              tableName: data_migration
+              tableName: game_info
       changes:
         - createTable:
-            tableName: data_migration
-            remarks: 数据加载表
+            tableName: game_info
+            remarks: 游戏信息表
             columns:
-              - column: { name: id, type: BIGINT UNSIGNED AUTO_INCREMENT, constraints: { primaryKey: true } }
-              - column: { name: name, type: VARCHAR(128), constraints: { nullable: false, unique: true } }
-              - column: { name: path, type: VARCHAR(1024), constraints: { nullable: false } }
-              - column: { name: type, type: VARCHAR(16), constraints: { nullable: false } }
-              - column: { name: depends, type: TEXT }
-              - column: { name: migration_time, type: DATETIME, defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE 
-                CURRENT_TIMESTAMP }
+              - column:
+                  name: game_id
+                  type: VARCHAR(16)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: game_version
+                  type: VARCHAR(16)
+                  defaultValue: "0.0"
+                  constraints:
+                    nullable: false
       rollback:
-        - dropTable: { tableName: data_migration }
+        - dropTable:
+            tableName: game_info

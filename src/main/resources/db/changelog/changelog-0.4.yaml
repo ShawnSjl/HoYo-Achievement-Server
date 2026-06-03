@@ -1,32 +1,36 @@
 databaseChangeLog:
-  # 1) sr_achievement
   - changeSet:
-      id: create_sr_achievement
+      id: create_achievement
       author: ShawnSjl
       context: "dev,prod"
       preConditions:
         - onFail: MARK_RAN
         - not:
             tableExists:
-              tableName: sr_achievement
+              tableName: achievement
       changes:
         - createTable:
-            tableName: sr_achievement
+            tableName: achievement
+            remarks: "游戏成就表"
             columns:
+              - column:
+                  name: game_id
+                  type: VARCHAR(16)
+                  constraints:
+                    nullable: false
               - column:
                   name: achievement_id
                   type: INT
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: class_name
-                  type: VARCHAR(64)
                   constraints:
                     nullable: false
               - column:
                   name: name
                   type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category
+                  type: VARCHAR(32)
                   constraints:
                     nullable: false
               - column:
@@ -37,7 +41,13 @@ databaseChangeLog:
               - column:
                   name: reward_level
                   type: INT
-                  defaultValueNumeric: 1
+                  defaultValueNumeric: '1'
+                  constraints:
+                    nullable: false
+              - column:
+                  name: branch_id
+                  type: INT
+                  defaultValueNumeric: '0'
                   constraints:
                     nullable: false
               - column:
@@ -45,66 +55,47 @@ databaseChangeLog:
                   type: VARCHAR(16)
                   constraints:
                     nullable: false
-      rollback:
-        - dropTable:
-            tableName: sr_achievement
-
-  # 2) sr_branch
-  - changeSet:
-      id: create_sr_branch
-      author: ShawnSjl
-      context: "dev,prod"
-      preConditions:
-        - tableExists: { tableName: sr_achievement }
-        - onFail: MARK_RAN
-        - not:
-            tableExists:
-              tableName: sr_branch
-      changes:
-        - createTable:
-            tableName: sr_branch
-            columns:
-              - column:
-                  name: achievement_id
-                  type: INT
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: branch_id
-                  type: INT
-                  constraints:
-                    nullable: false
+        - addPrimaryKey:
+            tableName: achievement
+            columnNames: game_id, achievement_id
+            constraintName: pk_achievement_uuid
         - addForeignKeyConstraint:
-            constraintName: fk_sr_branch_achievement
-            baseTableName: sr_branch
-            baseColumnNames: achievement_id
-            referencedTableName: sr_achievement
-            referencedColumnNames: achievement_id
+            constraintName: fk_achievement_game
+            baseTableName: achievement
+            baseColumnNames: game_id
+            referencedTableName: game_info
+            referencedColumnNames: game_id
             onDelete: CASCADE
+            onUpdate: CASCADE
       rollback:
         - dropTable:
-            tableName: sr_branch
+            tableName: achievement
 
-  # 3) sr_user_record（联合主键 + 外键到 users 与 sr_achievement）
   - changeSet:
-      id: create_sr_user_record
+      id: create_user_record
       author: ShawnSjl
       context: "dev,prod"
       preConditions:
-        - tableExists: { tableName: sr_achievement }
-        - tableExists: { tableName: account }
+        - tableExists:
+            tableName: achievement
+        - tableExists:
+            tableName: account
         - onFail: MARK_RAN
         - not:
             tableExists:
-              tableName: sr_user_record
+              tableName: user_record
       changes:
         - createTable:
-            tableName: sr_user_record
+            tableName: user_record
             columns:
               - column:
                   name: account_uuid
                   type: VARCHAR(512)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: game_id
+                  type: VARCHAR(16)
                   constraints:
                     nullable: false
               - column:
@@ -115,25 +106,26 @@ databaseChangeLog:
               - column:
                   name: complete
                   type: INT
-                  defaultValueNumeric: 0
+                  defaultValueNumeric: '0'
         - addPrimaryKey:
-            tableName: sr_user_record
-            columnNames: account_uuid, achievement_id
-            constraintName: pk_sr_user_record
+            tableName: user_record
+            columnNames: account_uuid, game_id, achievement_id
+            constraintName: pk_user_record
         - addForeignKeyConstraint:
-            constraintName: fk_su_user
-            baseTableName: sr_user_record
+            constraintName: fk_ur_account
+            baseTableName: user_record
             baseColumnNames: account_uuid
             referencedTableName: account
             referencedColumnNames: account_uuid
             onDelete: CASCADE
         - addForeignKeyConstraint:
-            constraintName: fk_su_achievement
-            baseTableName: sr_user_record
-            baseColumnNames: achievement_id
-            referencedTableName: sr_achievement
-            referencedColumnNames: achievement_id
+            constraintName: fk_ur_achievement
+            baseTableName: user_record
+            baseColumnNames: game_id, achievement_id
+            referencedTableName: achievement
+            referencedColumnNames: game_id, achievement_id
             onDelete: CASCADE
+            onUpdate: CASCADE
       rollback:
         - dropTable:
-            tableName: sr_user_record
+            tableName: user_record

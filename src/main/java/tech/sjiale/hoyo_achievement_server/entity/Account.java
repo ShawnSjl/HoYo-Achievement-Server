@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import tech.sjiale.hoyo_achievement_server.entity.nume.GameType;
+import tech.sjiale.hoyo_achievement_server.entity.nume.GameId;
 
 @Data
 @TableName("account")
@@ -15,8 +15,8 @@ public class Account {
     @TableField(value = "user_id")
     private Long userId;
 
-    @TableField(value = "game_type")
-    private GameType gameType;
+    @TableField(value = "game_id")
+    private GameId gameId;
 
     @TableField(value = "account_name")
     private String accountName;

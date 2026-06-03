@@ -40,7 +40,10 @@ public class UserController {
      * @return SaResult with token
      */
     @PostMapping("login")
-    public SaResult doLogin(@RequestBody LoginRequest request) {
+    public SaResult doLogin(
+            @RequestHeader Map<String, String> headers,
+            @RequestBody LoginRequest request
+    ) {
         // Check if the username and password are valid
         if (ParameterChecker.isUsernameInvalid(request.getUsername()) ||
                 ParameterChecker.isPasswordInvalid(request.getPassword())) {
@@ -67,7 +70,13 @@ public class UserController {
 
         // Set response data
         Map<String, Object> map = new HashMap<>();
-        map.put("token", StpUtil.getTokenInfo().tokenValue);
+
+        // If auth mode is bearer, set the token in the response
+        String authMode = headers.getOrDefault("x-auth-mode", "cookie");
+        if (authMode.equals("bearer")) {
+            map.put("token", StpUtil.getTokenInfo().tokenValue);
+        }
+
         map.put("username", userResponse.data().getUsername());
         map.put("isSuper", userResponse.data().getRole() != UserRole.USER);
         map.put("isRoot", userResponse.data().getRole() == UserRole.ROOT);
@@ -75,7 +84,7 @@ public class UserController {
     }
 
     /**
-     * Is user login; it will check token in header
+     * Is user login; it will check the token in the header
      *
      * @return SaResult
      */
@@ -140,6 +149,32 @@ public class UserController {
     }
 
     /**
+     * Get user info;
+     *
+     * @return SaResult with user info
+     */
+    @GetMapping("info")
+    @SaCheckLogin
+    public SaResult getUserInfo() {
+        // Get user id from token
+        Long userId = StpUtil.getLoginIdAsLong();
+
+        // Check if the user is root
+        ServiceResponse<User> currentUser = userService.getUserById(userId);
+        if (!currentUser.success()) {
+            log.error(currentUser.message());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, currentUser.message());
+        }
+
+        // Set response data
+        Map<String, Object> map = new HashMap<>();
+        map.put("username", currentUser.data().getUsername());
+        map.put("isSuper", currentUser.data().getRole() != UserRole.USER);
+        map.put("isRoot", currentUser.data().getRole() == UserRole.ROOT);
+        return SaResult.ok("获取用户信息成功").setData(map);
+    }
+
+    /**
      * Get all users;
      * Should only be called by admin or root
      *
@@ -191,13 +226,14 @@ public class UserController {
     /**
      * Update username
      *
-     * @param request UpdateUsernameRequest with a new username
+     * @param clientId client id, used to identify the source of the request
+     * @param request  UpdateUsernameRequest with a new username
      * @return SaResult
      */
     @PutMapping("update-username")
     @SaCheckLogin
     @SaCheckSafe
-    public SaResult updateUsername(@RequestBody UpdateUsernameRequest request) {
+    public SaResult updateUsername(@RequestParam String clientId, @RequestBody UpdateUsernameRequest request) {
         // Check if the username is valid
         if (ParameterChecker.isUsernameInvalid(request.getUsername())) {
             log.error("Invalid new username: {}", request.getUsername());
@@ -208,12 +244,13 @@ public class UserController {
         Long userId = StpUtil.getLoginIdAsLong();
 
         // Update username
-        ServiceResponse<?> response = userService.updateUsername(userId, request.getUsername());
+        ServiceResponse<?> response = userService.updateUsername(userId, clientId, request.getUsername());
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("用户名已存在").setCode(HttpStatus.BAD_REQUEST.value());
         }
         log.info(response.message());
+
         return SaResult.ok("用户名更新成功");
     }
 
@@ -246,7 +283,7 @@ public class UserController {
         // Check if the password matches
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         if (!passwordEncoder.matches(request.getOldPassword(), userResponse.data().getPassword())) {
-            log.error("Password doesn't match.");
+            log.error("Old password doesn't match.");
             return SaResult.error("密码错误").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
@@ -263,7 +300,7 @@ public class UserController {
     /**
      * Update user status;
      * Should only be called by admin or root;
-     * Admin cannot change status of another admin.
+     * Admin cannot change the status of another admin.
      *
      * @param request UpdateStatusRequest with user id and status
      * @return SaResult
@@ -286,7 +323,7 @@ public class UserController {
         // Get target user
         ServiceResponse<User> targetUserResponse = userService.getUserById(request.getUserId());
         if (!targetUserResponse.success()) {
-            log.error(currentUserResponse.message());
+            log.error(targetUserResponse.message());
             return SaResult.error("用户不存在").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
@@ -303,6 +340,7 @@ public class UserController {
             return SaResult.error("状态更新错误").setCode(HttpStatus.BAD_REQUEST.value());
         }
         log.info(response.message());
+
         return SaResult.ok("状态更新成功");
     }
 
@@ -325,6 +363,7 @@ public class UserController {
             return SaResult.error("权限更新错误").setCode(HttpStatus.BAD_REQUEST.value());
         }
         log.info(response.message());
+
         return SaResult.ok("用户权限更新成功");
     }
 
@@ -332,17 +371,18 @@ public class UserController {
      * Delete user;
      * Should only be called by the user itself
      *
+     * @param clientId client id, used to identify the source of the request
      * @return SaResult
      */
     @DeleteMapping("delete")
     @SaCheckLogin
     @SaCheckSafe
-    public SaResult deleteUser() {
+    public SaResult deleteUser(@RequestParam String clientId) {
         // Get user id from token
         Long userId = StpUtil.getLoginIdAsLong();
 
         // Delete user
-        ServiceResponse<?> response = userService.deleteUser(userId);
+        ServiceResponse<?> response = userService.deleteUser(userId, clientId);
         if (!response.success()) {
             log.error(response.message());
             return SaResult.error("Root账户无法删除").setCode(HttpStatus.BAD_REQUEST.value());
@@ -377,12 +417,13 @@ public class UserController {
         // Check if the password matches
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         if (!passwordEncoder.matches(request.getPassword(), userResponse.data().getPassword())) {
-            log.error("Password doesn't match.");
+            log.error("Password doesn't match during second auth.");
             return SaResult.error("二级验证失败").setCode(HttpStatus.UNAUTHORIZED.value());
         }
 
         // Open safe for 2 minutes
         StpUtil.openSafe(120);
+        log.info("Second auth success for user {}.", userResponse.data().getUsername());
         return SaResult.ok("二级验证成功");
     }
 }

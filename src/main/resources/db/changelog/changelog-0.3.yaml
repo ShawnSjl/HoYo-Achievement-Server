@@ -1,139 +1,75 @@
 databaseChangeLog:
-  # 1) zzz_achievement
   - changeSet:
-      id: create_zzz_achievement
+      id: create_users
       author: ShawnSjl
-      context: "dev,prod"
+      context: "dev, prod"
       preConditions:
         - onFail: MARK_RAN
         - not:
             tableExists:
-              tableName: zzz_achievement
+              tableName: users
       changes:
         - createTable:
-            tableName: zzz_achievement
+            tableName: users
+            remarks: 用户表
             columns:
-              - column:
-                  name: achievement_id
-                  type: INT
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: class_id
-                  type: INT
-                  constraints:
-                    nullable: false
-              - column:
-                  name: name
-                  type: VARCHAR(128)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: description
-                  type: VARCHAR(256)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: reward_level
-                  type: INT
-                  defaultValueNumeric: 1
-                  constraints:
-                    nullable: false
-              - column:
-                  name: game_version
-                  type: VARCHAR(16)
-                  constraints:
-                    nullable: false
+              - column: { name: id, type: BIGINT UNSIGNED AUTO_INCREMENT, constraints: { primaryKey: true } }
+              - column: { name: username, type: VARCHAR(50), constraints: { nullable: false, unique: true } }
+              - column: { name: password, type: VARCHAR(512), constraints: { nullable: false } }
+              - column: { name: role, type: VARCHAR(16), constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(16), constraints: { nullable: false } }
+              - column: { name: created_at, type: DATETIME, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: DATETIME, defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP }
       rollback:
-        - dropTable:
-            tableName: zzz_achievement
+        - dropTable: { tableName: users }
 
-  # 2) zzz_branch
   - changeSet:
-      id: create_zzz_branch
+      id: create_account
       author: ShawnSjl
-      context: "dev,prod"
+      context: "dev, prod"
       preConditions:
-        - tableExists: { tableName: zzz_achievement }
+        - tableExists:
+            tableName: users
         - onFail: MARK_RAN
         - not:
             tableExists:
-              tableName: zzz_branch
+              tableName: account
       changes:
         - createTable:
-            tableName: zzz_branch
+            tableName: account
+            remarks: 账号表
             columns:
-              - column:
-                  name: achievement_id
-                  type: INT
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: branch_id
-                  type: INT
-                  constraints:
-                    nullable: false
+              - column: { name: account_uuid, type: VARCHAR(512), constraints: { primaryKey: true } }
+              - column: { name: user_id, type: BIGINT UNSIGNED, constraints: { nullable: false } }
+              - column: { name: game_id, type: VARCHAR(16), constraints: { nullable: false } }
+              - column: { name: account_name, type: VARCHAR(24), constraints: { nullable: false } }
+              - column: { name: account_in_game_uid, type: VARCHAR(128) }
         - addForeignKeyConstraint:
-            constraintName: fk_zzz_branch_achievement
-            baseTableName: zzz_branch
-            baseColumnNames: achievement_id
-            referencedTableName: zzz_achievement
-            referencedColumnNames: achievement_id
+            constraintName: fk_users_account_user_id
+            baseTableName: account
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
             onDelete: CASCADE
+        - addForeignKeyConstraint:
+            constraintName: fk_account_game_game_id
+            baseTableName: account
+            baseColumnNames: game_id
+            referencedTableName: game_info
+            referencedColumnNames: game_id
       rollback:
-        - dropTable:
-            tableName: zzz_branch
+        - dropTable: { tableName: account }
 
-  # 3) zzz_user_record（联合主键 + 外键到 users 与 zzz_achievement）
   - changeSet:
-      id: create_zzz_user_record
+      id: add-user-index
       author: ShawnSjl
-      context: "dev,prod"
-      preConditions:
-        - tableExists: { tableName: zzz_achievement }
-        - tableExists: { tableName: account }
-        - onFail: MARK_RAN
-        - not:
-            tableExists:
-              tableName: zzz_user_record
+      context: "dev, prod"
       changes:
-        - createTable:
-            tableName: zzz_user_record
+        - createIndex:
+            tableName: users
+            indexName: ix_user_username
+            unique: true
             columns:
-              - column:
-                  name: account_uuid
-                  type: VARCHAR(512)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: achievement_id
-                  type: INT
-                  constraints:
-                    nullable: false
-              - column:
-                  name: complete
-                  type: INT
-                  defaultValueNumeric: 0
-        - addPrimaryKey:
-            tableName: zzz_user_record
-            columnNames: account_uuid, achievement_id
-            constraintName: pk_zzz_user_record
-        - addForeignKeyConstraint:
-            constraintName: fk_zu_user
-            baseTableName: zzz_user_record
-            baseColumnNames: account_uuid
-            referencedTableName: account
-            referencedColumnNames: account_uuid
-            onDelete: CASCADE
-        - addForeignKeyConstraint:
-            constraintName: fk_zu_achievement
-            baseTableName: zzz_user_record
-            baseColumnNames: achievement_id
-            referencedTableName: zzz_achievement
-            referencedColumnNames: achievement_id
-            onDelete: CASCADE
+              - column: { name: username }
       rollback:
-        - dropTable:
-            tableName: zzz_user_record
+        - dropIndex: { tableName: users, indexName: ix_user_username }

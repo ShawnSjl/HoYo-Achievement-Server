@@ -39,11 +39,9 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
     @Value("${app.data.repo-url}")
     private String dataUrl;
 
-    private final ServerInfoService serverInfoService;
-    private final SrAchievementService srAchievementService;
-    private final SrBranchService srBranchService;
-    private final ZzzAchievementService zzzAchievementService;
-    private final ZzzBranchService zzzBranchService;
+    private final ServerUpdateLogService serverUpdateLogService;
+    private final GameInfoService gameInfoService;
+    private final AchievementService achievementService;
 
     /**
      * Get all data migration record; file's path are hidden
@@ -290,11 +288,9 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
      */
     private void handleInsert(String table, List<Map<String, Object>> data) {
         ServiceResponse<?> res = switch (table) {
-            case "server_info" -> serverInfoService.insertServerInfoBatch(data);
-            case "sr_achievement" -> srAchievementService.insertAchievementBatch(data);
-            case "sr_branch" -> srBranchService.insertBranchBatch(data);
-            case "zzz_achievement" -> zzzAchievementService.insertAchievementBatch(data);
-            case "zzz_branch" -> zzzBranchService.insertBranchBatch(data);
+            case "server_update_log" -> serverUpdateLogService.insertServerUpdateLogBatch(data);
+            case "game_info" -> gameInfoService.insertGameInfoBatch(data);
+            case "achievement" -> achievementService.insertAchievementBatch(data);
             default -> {
                 log.warn("Unknown table type '{}' for insert", table);
                 throw new IllegalArgumentException("Unknown table type '" + table + "' for insert");
@@ -315,11 +311,9 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
      */
     private void handleUpdate(String table, List<Map<String, Object>> data) {
         ServiceResponse<?> res = switch (table) {
-            case "server_info" -> serverInfoService.updateServerInfoBatch(data);
-            case "sr_achievement" -> srAchievementService.updateAchievementBatch(data);
-            case "sr_branch" -> srBranchService.updateBranchBatch(data);
-            case "zzz_achievement" -> zzzAchievementService.updateAchievementBatch(data);
-            case "zzz_branch" -> zzzBranchService.updateBranchBatch(data);
+            case "server_update_log" -> serverUpdateLogService.updateServerUpdateLogBatch(data);
+            case "game_info" -> gameInfoService.updateGameInfoBatch(data);
+            case "achievement" -> achievementService.updateAchievementBatch(data);
             default -> {
                 log.warn("Unknown table type '{}' for update", table);
                 throw new IllegalArgumentException("Unknown table type '" + table + "' for update");
@@ -340,11 +334,9 @@ public class MigrationServiceImpl extends ServiceImpl<DataMigrationMapper, DataM
      */
     private void handleDelete(String table, List<Map<String, Object>> data) {
         ServiceResponse<?> res = switch (table) {
-            case "server_info" -> serverInfoService.deleteServerInfoBatch(data);
-            case "sr_achievement" -> srAchievementService.deleteAchievementBatch(data);
-            case "sr_branch" -> srBranchService.deleteBranchBatch(data);
-            case "zzz_achievement" -> zzzAchievementService.deleteAchievementBatch(data);
-            case "zzz_branch" -> zzzBranchService.deleteBranchBatch(data);
+            case "server_update_log" -> serverUpdateLogService.deleteServerUpdateLogBatch(data);
+            case "game_info" -> gameInfoService.deleteGameInfoBatch(data);
+            case "achievement" -> achievementService.deleteAchievementBatch(data);
             default -> {
                 log.warn("Unknown table type '{}' for delete", table);
                 throw new IllegalArgumentException("Unknown table type '" + table + "' for delete");
